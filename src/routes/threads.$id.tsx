@@ -42,7 +42,7 @@ function ThreadPage() {
         <div className="border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-6">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="border-primary/30 text-primary">{thread.category}</Badge>
-            {thread.tags.map((t) => (
+            {thread.tags.map((t: string) => (
               <span key={t} className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
                 #{t}
               </span>
