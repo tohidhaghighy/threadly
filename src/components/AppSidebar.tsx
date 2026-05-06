@@ -1,5 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, MessageSquare, PlusCircle, ShieldCheck, Flame, Bookmark, Users, Settings, Cpu } from "lucide-react";
+import { Home, MessageSquare, PlusCircle, ShieldCheck, Users, Settings, Cpu, Tags, HelpCircle } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
+import { useQuery } from "@tanstack/react-query";
 import {
   Sidebar,
   SidebarContent,
@@ -11,47 +13,47 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { categories } from "@/lib/mock-data";
-
-const mainItems = [
-  { title: "خانه", url: "/", icon: Home },
-  { title: "گفتگوها", url: "/threads", icon: MessageSquare },
-  { title: "داغ‌ترین‌ها", url: "/threads", icon: Flame },
-  { title: "ذخیره شده‌ها", url: "/threads", icon: Bookmark },
-  { title: "ایجاد موضوع", url: "/new", icon: PlusCircle },
-];
-
-const adminItems = [
-  { title: "پنل مدیریت", url: "/admin", icon: ShieldCheck },
-  { title: "کاربران", url: "/admin", icon: Users },
-  { title: "تنظیمات", url: "/admin", icon: Settings },
-];
+import { useAuth } from "@/lib/auth";
+import { useCategories } from "@/lib/categories";
+import { categories as mockCategories } from "@/lib/mock-data";
 
 export function AppSidebar() {
+  const { t, dir } = useI18n();
+  const auth = useAuth();
+  const { isMobile, setOpenMobile } = useSidebar();
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
   const isActive = (path: string) => currentPath === path;
 
+  const categoriesQuery = useCategories();
+  const categories = categoriesQuery.data?.items ?? [];
+  const iconByTitle = new Map(mockCategories.map((c) => [c.title, c.icon]));
+
   return (
-    <Sidebar collapsible="icon" side="right">
+    <Sidebar collapsible="icon" side={dir === "rtl" ? "right" : "left"}>
       <SidebarHeader className="border-b border-sidebar-border">
         <Link to="/" className="flex items-center gap-2 px-2 py-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
             <Cpu className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="text-base font-extrabold text-gradient-primary">پارس‌بیلد</span>
-            <span className="text-[10px] text-muted-foreground">انجمن سازندگان کیس</span>
+            <span className="text-base font-extrabold text-gradient-primary">Threadly</span>
+            <span className="text-[10px] text-muted-foreground">انجمن گفتگو</span>
           </div>
         </Link>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>پیمایش</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {[
+                { title: t("nav.home"), url: "/", icon: Home },
+                { title: t("nav.threads"), url: "/threads", icon: MessageSquare },
+                { title: t("nav.newThread"), url: "/new", icon: PlusCircle },
+              ].map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <Link to={item.url}>
@@ -66,47 +68,65 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>دسته‌بندی‌ها</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.categories")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {categories.slice(0, 5).map((cat) => (
+              {categories.map((cat) => {
+                const Icon = iconByTitle.get(cat.title) ?? HelpCircle;
+                return (
                 <SidebarMenuItem key={cat.id}>
                   <SidebarMenuButton asChild>
-                    <Link to="/threads">
-                      <cat.icon />
+                    <Link
+                      to="/threads"
+                      search={{ category: cat.title }}
+                      onClick={() => {
+                        if (isMobile) setOpenMobile(false);
+                      }}
+                    >
+                      <Icon />
                       <span>{cat.title}</span>
-                      <span className="ms-auto text-[10px] text-muted-foreground">{cat.threads}</span>
+                      <span className="ms-auto text-[10px] text-muted-foreground">
+                        {cat.threadsCount.toLocaleString("fa-IR")}
+                      </span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>مدیریت</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <Link to={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {auth.isAdmin ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>{t("nav.admin")}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {[
+                  { title: t("nav.admin"), url: "/admin", icon: ShieldCheck },
+                  { title: "دسته‌بندی‌ها", url: "/admin/categories", icon: Tags },
+                  { title: t("nav.users"), url: "/admin", icon: Users },
+                  { title: t("nav.settings"), url: "/admin", icon: Settings },
+                ].map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <Link to={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
         <div className="rounded-lg bg-gradient-primary/10 border border-primary/20 p-3 group-data-[collapsible=icon]:hidden">
-          <p className="text-xs font-semibold text-foreground">عضویت پرمیوم</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">دسترسی به راهنماهای ویژه</p>
+          <p className="text-xs font-semibold text-foreground">{t("footer.freeAccess")}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">{t("footer.freeAccessDesc")}</p>
         </div>
       </SidebarFooter>
     </Sidebar>

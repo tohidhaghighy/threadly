@@ -23,6 +23,7 @@ export function ThreadCard({ thread }: { thread: Thread }) {
     <Link
       to="/threads/$id"
       params={{ id: thread.id }}
+      hash="replies"
       className="group relative block overflow-hidden rounded-xl border border-border/60 bg-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-glow"
     >
       <div className="flex items-start gap-4">
@@ -36,7 +37,7 @@ export function ThreadCard({ thread }: { thread: Thread }) {
           <div className="flex flex-wrap items-center gap-2">
             {thread.pinned && (
               <Badge variant="secondary" className="gap-1 bg-primary/15 text-primary">
-                <Pin className="h-3 w-3" />سنجاق
+                <Pin className="h-3 w-3" />سنجاق‌شده
               </Badge>
             )}
             {thread.hot && (
@@ -77,7 +78,7 @@ export function ThreadCard({ thread }: { thread: Thread }) {
               </span>
               <span className="flex items-center gap-1">
                 <Eye className="h-3.5 w-3.5" />
-                {thread.views.toLocaleString("fa-IR")}
+                {thread.views.toLocaleString("en-US")}
               </span>
             </div>
           </div>

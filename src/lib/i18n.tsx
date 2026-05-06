@@ -1,0 +1,197 @@
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+
+type Dict = Record<string, string>;
+
+const fa: Dict = {
+  // header / nav
+  "nav.home": "خانه",
+  "nav.threads": "گفتگوها",
+  "nav.trending": "داغ‌ترین‌ها",
+  "nav.newThread": "موضوع جدید",
+  "nav.admin": "مدیریت",
+  "nav.users": "کاربران",
+  "nav.settings": "تنظیمات",
+  "nav.categories": "دسته‌بندی‌ها",
+  "nav.navigation": "پیمایش",
+  "header.searchPlaceholder": "جستجو در گفتگوها، تگ‌ها و کاربران...",
+  "header.toggleTheme": "تغییر تم",
+  "header.guestUser": "کاربر مهمان",
+  "header.member": "عضو",
+  "header.profile": "پروفایل",
+  "header.settings": "تنظیمات",
+  "header.signOut": "خروج",
+  "footer.freeAccess": "دسترسی آزاد",
+  "footer.freeAccessDesc": "تمام امکانات برای همه کاربران فعال است",
+
+  // common
+  "common.all": "همه",
+  "common.filter": "فیلتر",
+  "common.advanced": "پیشرفته",
+  "common.cancel": "انصراف",
+  "common.submitForReview": "ارسال برای بررسی",
+  "common.back": "بازگشت",
+
+  // home
+  "home.badge": "انجمن رسمی Threadly",
+  "home.title": "هر آنچه برای ساختن PC رویایی نیاز دارید",
+  "home.subtitle": "از مونتاژ کیس تا عیب‌یابی. به جامعه‌ای از بیلدرها بپیوندید و سوال بپرسید.",
+  "home.ask": "شروع گفتگو",
+  "home.browse": "مرور موضوعات",
+  "home.categories": "دسته‌بندی‌ها",
+  "home.categoriesDesc": "موضوع مورد علاقه‌ات را انتخاب کن",
+  "home.viewAll": "همه",
+  "home.trending": "گفتگوهای داغ",
+  "home.trendingDesc": "پربازدیدترین‌های این هفته",
+  "home.threadsUnit": "گفتگو",
+  "home.membersUnit": "عضو",
+  "home.responseUnit": "پاسخ‌گویی",
+
+  // threads list
+  "threads.title": "همه گفتگوها",
+  "threads.subtitle": "{threads} موضوع فعال در {categories} دسته",
+  "threads.emptyTitle": "هنوز موضوعی نیست",
+  "threads.emptyDesc": "اولین نفری باشید که گفتگو را شروع می‌کند.",
+  "threads.emptyCta": "ایجاد موضوع",
+  "threads.filters.newest": "جدیدترین",
+  "threads.filters.mostLiked": "محبوب‌ترین",
+  "threads.filters.unanswered": "بدون پاسخ",
+  "threads.filters.solved": "حل‌شده",
+
+  // new thread
+  "new.title": "ایجاد موضوع جدید",
+  "new.subtitle": "سؤال یا تجربه خود را با جامعه به اشتراک بگذارید",
+  "new.requiresApproval": "نیازمند تأیید مدیر",
+  "new.field.title": "عنوان موضوع",
+  "new.field.titleHint": "عنوانی واضح انتخاب کنید (حداقل ۱۰ کاراکتر)",
+  "new.field.category": "دسته‌بندی",
+  "new.field.categoryPlaceholder": "یک دسته انتخاب کنید",
+  "new.field.tags": "برچسب‌ها",
+  "new.field.tagsPlaceholder": "با کاما جدا کنید: GPU, Cooling, FPS",
+  "new.field.details": "محتوا",
+  "new.field.detailsPlaceholder": "جزئیات کامل را بنویسید. مشخصات سیستم، ارورها، چیزی که امتحان کرده‌اید...",
+  "new.preview": "پیش‌نمایش",
+  "new.images": "تصاویر",
+  "new.imagesCta": "برای انتخاب تصویر کلیک کنید",
+  "new.imagesHint": "هر فرمت تصویری (PNG, JPG, GIF, WEBP, SVG, ...) — فقط UI",
+  "new.imagesOnlyError": "فقط فایل‌های تصویری قابل انتخاب هستند.",
+  "new.remove": "حذف",
+  "new.submittedBadge": "در انتظار تأیید",
+  "new.submittedTitle": "موضوع شما ارسال شد",
+  "new.submittedDesc": "پس از بررسی توسط مدیران، منتشر خواهد شد (معمولاً کمتر از ۲۴ ساعت).",
+  "new.submittedAgain": "ایجاد موضوع جدید",
+  "new.toastSubmitted": "موضوع برای بررسی ارسال شد",
+
+  // admin
+  "admin.title": "پنل مدیریت",
+  "admin.subtitle": "بررسی و تأیید موضوعات ارسالی",
+  "admin.pendingReview": "در انتظار بررسی",
+  "admin.approved": "تأیید شده",
+  "admin.rejected": "رد شده",
+  "admin.search": "جستجوی موضوع...",
+  "admin.table.title": "عنوان",
+  "admin.table.author": "نویسنده",
+  "admin.table.category": "دسته",
+  "admin.table.date": "تاریخ",
+  "admin.table.status": "وضعیت",
+  "admin.table.actions": "عملیات",
+  "admin.noResults": "موردی یافت نشد",
+  "admin.toastApproved": "موضوع تأیید شد",
+  "admin.toastRejected": "موضوع رد شد",
+
+  // auth
+  "auth.signIn": "ورود",
+  "auth.signUp": "ثبت‌نام",
+  "auth.signInSubtitle": "ورود به حساب کاربری",
+  "auth.signUpSubtitle": "ساخت حساب جدید",
+  "auth.enterEmailPassword": "ایمیل و رمز عبور خود را وارد کنید.",
+  "auth.signupHint": "برای پرسیدن سؤال و ارسال پاسخ ثبت‌نام کنید.",
+  "auth.email": "ایمیل",
+  "auth.password": "رمز عبور",
+  "auth.confirmPassword": "تکرار رمز عبور",
+  "auth.name": "نام",
+  "auth.createAccount": "ساخت حساب",
+  "auth.haveAccount": "حساب دارید؟ ورود",
+  "auth.noAccount": "ساخت حساب جدید",
+  "auth.backHome": "بازگشت به خانه",
+  "auth.toastSignedIn": "با موفقیت وارد شدید.",
+  "auth.toastAccountCreated": "حساب ساخته شد.",
+  "auth.errorInvalidEmail": "ایمیل معتبر وارد کنید.",
+  "auth.errorPasswordMin": "رمز عبور باید حداقل ۶ کاراکتر باشد.",
+  "auth.errorNameMin": "نام باید حداقل ۲ کاراکتر باشد.",
+  "auth.errorConfirmPasswordMin": "تکرار رمز عبور باید حداقل ۶ کاراکتر باشد.",
+  "auth.errorPasswordsDontMatch": "رمزهای عبور یکسان نیستند.",
+  "auth.errorInvalidCredentials": "ایمیل یا رمز عبور اشتباه است.",
+  "auth.errorEmailExists": "این ایمیل قبلاً ثبت شده است.",
+
+  // change password
+  "password.title": "تغییر رمز عبور",
+  "password.subtitle": "رمز فعلی را وارد کنید و رمز جدید بسازید.",
+  "password.current": "رمز عبور فعلی",
+  "password.new": "رمز عبور جدید",
+  "password.confirm": "تکرار رمز عبور جدید",
+  "password.update": "به‌روزرسانی رمز",
+  "password.toastUpdated": "رمز عبور با موفقیت تغییر کرد.",
+  "password.signInRequiredTitle": "نیاز به ورود",
+  "password.signInRequiredDesc": "برای تغییر رمز عبور باید وارد حساب خود شوید.",
+  "password.goSignIn": "ورود",
+  "password.cancel": "انصراف",
+
+  // thread detail / replies
+  "thread.backToThreads": "بازگشت به گفتگوها",
+  "thread.views": "بازدید",
+  "thread.replies": "پاسخ",
+  "thread.noRepliesTitle": "هنوز پاسخی ثبت نشده",
+  "thread.noRepliesDesc": "اولین نفری باشید که پاسخ می‌دهد.",
+  "thread.yourReply": "پاسخ شما",
+  "thread.replyPlaceholder": "پاسخ خود را بنویسید...",
+  "thread.postReply": "ارسال پاسخ",
+  "thread.toastReplyPosted": "پاسخ ارسال شد",
+  "thread.notFoundOrPending": "این گفتگو یافت نشد یا هنوز تأیید نشده است.",
+
+  // admin access
+  "admin.accessRequired": "دسترسی مدیریت لازم است. با `admin@threadly.com` (رمز: `threadly`) وارد شوید.",
+
+  // header
+  "header.signIn": "ورود",
+};
+
+function format(template: string, vars?: Record<string, string | number>) {
+  if (!vars) return template;
+  return template.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+}
+
+type I18nValue = {
+  lang: "fa";
+  dir: "rtl";
+  t: (key: string, vars?: Record<string, string | number>) => string;
+};
+
+const I18nContext = createContext<I18nValue | null>(null);
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const lang = "fa" as const;
+  const dir = "rtl" as const;
+  const dict = fa;
+  const value = useMemo<I18nValue>(
+    () => ({
+      lang,
+      dir,
+      t: (key, vars) => format(dict[key] ?? key, vars),
+    }),
+    [dict],
+  );
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = dir;
+  }, [lang, dir]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+export function useI18n() {
+  const ctx = useContext(I18nContext);
+  if (!ctx) throw new Error("useI18n must be used within <I18nProvider>");
+  return ctx;
+}
+

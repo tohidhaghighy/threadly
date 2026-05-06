@@ -1,0 +1,7 @@
+dist
+node_modules
+threadly.sqlite
+threadly.sqlite-journal
+uploads
+.env
+

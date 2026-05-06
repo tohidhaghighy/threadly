@@ -10,19 +10,38 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThreadsRouteImport } from './routes/threads'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as NewRouteImport } from './routes/new'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ChangePasswordRouteImport } from './routes/change-password'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ThreadsIdRouteImport } from './routes/threads.$id'
+import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 
 const ThreadsRoute = ThreadsRouteImport.update({
   id: '/threads',
   path: '/threads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewRoute = NewRouteImport.update({
   id: '/new',
   path: '/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangePasswordRoute = ChangePasswordRouteImport.update({
+  id: '/change-password',
+  path: '/change-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -40,41 +59,89 @@ const ThreadsIdRoute = ThreadsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ThreadsRoute,
 } as any)
+const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/change-password': typeof ChangePasswordRoute
+  '/login': typeof LoginRoute
   '/new': typeof NewRoute
+  '/register': typeof RegisterRoute
   '/threads': typeof ThreadsRouteWithChildren
+  '/admin/categories': typeof AdminCategoriesRoute
   '/threads/$id': typeof ThreadsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/change-password': typeof ChangePasswordRoute
+  '/login': typeof LoginRoute
   '/new': typeof NewRoute
+  '/register': typeof RegisterRoute
   '/threads': typeof ThreadsRouteWithChildren
+  '/admin/categories': typeof AdminCategoriesRoute
   '/threads/$id': typeof ThreadsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/change-password': typeof ChangePasswordRoute
+  '/login': typeof LoginRoute
   '/new': typeof NewRoute
+  '/register': typeof RegisterRoute
   '/threads': typeof ThreadsRouteWithChildren
+  '/admin/categories': typeof AdminCategoriesRoute
   '/threads/$id': typeof ThreadsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/new' | '/threads' | '/threads/$id'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/change-password'
+    | '/login'
+    | '/new'
+    | '/register'
+    | '/threads'
+    | '/admin/categories'
+    | '/threads/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/new' | '/threads' | '/threads/$id'
-  id: '__root__' | '/' | '/admin' | '/new' | '/threads' | '/threads/$id'
+  to:
+    | '/'
+    | '/admin'
+    | '/change-password'
+    | '/login'
+    | '/new'
+    | '/register'
+    | '/threads'
+    | '/admin/categories'
+    | '/threads/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/change-password'
+    | '/login'
+    | '/new'
+    | '/register'
+    | '/threads'
+    | '/admin/categories'
+    | '/threads/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  ChangePasswordRoute: typeof ChangePasswordRoute
+  LoginRoute: typeof LoginRoute
   NewRoute: typeof NewRoute
+  RegisterRoute: typeof RegisterRoute
   ThreadsRoute: typeof ThreadsRouteWithChildren
 }
 
@@ -87,11 +154,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThreadsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new': {
       id: '/new'
       path: '/new'
       fullPath: '/new'
       preLoaderRoute: typeof NewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/change-password': {
+      id: '/change-password'
+      path: '/change-password'
+      fullPath: '/change-password'
+      preLoaderRoute: typeof ChangePasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -115,8 +203,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThreadsIdRouteImport
       parentRoute: typeof ThreadsRoute
     }
+    '/admin/categories': {
+      id: '/admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AdminCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminCategoriesRoute: typeof AdminCategoriesRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminCategoriesRoute: AdminCategoriesRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ThreadsRouteChildren {
   ThreadsIdRoute: typeof ThreadsIdRoute
@@ -131,10 +236,22 @@ const ThreadsRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
+  ChangePasswordRoute: ChangePasswordRoute,
+  LoginRoute: LoginRoute,
   NewRoute: NewRoute,
+  RegisterRoute: RegisterRoute,
   ThreadsRoute: ThreadsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
