@@ -14,10 +14,16 @@ import { CategoriesModule } from "../categories/categories.module";
 import { UserEntity } from "../../persistence/entities/user.entity";
 import { ThreadEntity } from "../../persistence/entities/thread.entity";
 import { ReplyEntity } from "../../persistence/entities/reply.entity";
+import { ReplyLikeEntity } from "../../persistence/entities/reply-like.entity";
+import { ReplyReactionEntity } from "../../persistence/entities/reply-reaction.entity";
 import { AttachmentEntity } from "../../persistence/entities/attachment.entity";
 import { CategoryEntity } from "../../persistence/entities/category.entity";
+import { ThreadLikeEntity } from "../../persistence/entities/thread-like.entity";
+import { ThreadViewEntity } from "../../persistence/entities/thread-view.entity";
+import { ReplyAttachmentEntity } from "../../persistence/entities/reply-attachment.entity";
 import { SeedService } from "./seed.service";
 import { StatsController } from "./stats.controller";
+import { SeoController } from "./seo.controller";
 
 @Module({
   imports: [
@@ -31,7 +37,18 @@ import { StatsController } from "./stats.controller";
       useFactory: (config: ConfigService) => ({
         type: "sqlite",
         database: config.get<string>("DB_PATH") ?? "threadly.sqlite",
-        entities: [UserEntity, ThreadEntity, ReplyEntity, AttachmentEntity, CategoryEntity],
+        entities: [
+          UserEntity,
+          ThreadEntity,
+          ReplyEntity,
+          ReplyLikeEntity,
+          ReplyReactionEntity,
+          ReplyAttachmentEntity,
+          AttachmentEntity,
+          CategoryEntity,
+          ThreadLikeEntity,
+          ThreadViewEntity,
+        ],
         synchronize: true,
         logging: false,
       }),
@@ -44,7 +61,7 @@ import { StatsController } from "./stats.controller";
     RepliesModule,
     AdminModule,
   ],
-  controllers: [StatsController],
+  controllers: [StatsController, SeoController],
   providers: [SeedService],
 })
 export class AppModule {
@@ -53,6 +70,7 @@ export class AppModule {
   async onModuleInit() {
     await this.seed.seedAdmin();
     await this.seed.seedCategories();
+    this.seed.seedAvatarSamples();
   }
 }
 

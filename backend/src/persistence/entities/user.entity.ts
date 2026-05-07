@@ -28,6 +28,13 @@ export class UserEntity {
   @Column({ type: "varchar", length: 512, nullable: true })
   avatarUrl!: string | null;
 
+  /**
+   * How many of the user's replies were deleted by admins.
+   * Used for auto-moderation (ban after repeated removals).
+   */
+  @Column({ type: "int", default: 0 })
+  adminDeletedRepliesCount!: number;
+
   @OneToMany(() => ThreadEntity, (t) => t.author)
   threads!: ThreadEntity[];
 

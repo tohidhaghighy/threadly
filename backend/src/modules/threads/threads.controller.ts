@@ -21,6 +21,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiResponse, ApiTags } from "@nest
 
 import { ThreadsService } from "./threads.service";
 import { JwtAuthGuard } from "../auth/jwt.guard";
+import { OptionalJwtAuthGuard } from "../auth/optional-jwt.guard";
 import { CreateThreadDto } from "./dto";
 import { AttachmentEntity } from "../../persistence/entities/attachment.entity";
 import { UsersService } from "../users/users.service";
@@ -69,9 +70,44 @@ export class ThreadsController {
     return this.threads.categoryCounts();
   }
 
+  @Get("tags")
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        items: [
+          { tag: "gpu", count: 12 },
+          { tag: "psu", count: 8 },
+        ],
+      },
+    },
+  })
+  tags(@Query("category") category?: string, @Query("limit") limit?: string) {
+    return this.threads.tagsCatalog({ category, limit });
+  }
+
   @Get(":id")
-  get(@Param("id") id: string) {
-    return this.threads.getPublic(id);
+  @UseGuards(OptionalJwtAuthGuard)
+  get(@Param("id") id: string, @Req() req: Request) {
+    const user = req.user as { userId: string } | undefined;
+    return this.threads.getPublic(id, user?.userId);
+  }
+
+  @Post(":id/like")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, schema: { example: { likesCount: 3, likedByMe: true } } })
+  toggleLike(@Param("id") id: string, @Req() req: Request) {
+    const user = req.user as { userId: string };
+    return this.threads.toggleLike(id, user.userId);
+  }
+
+  @Post(":id/view")
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiResponse({ status: 200, schema: { example: { viewsCount: 42 } } })
+  recordView(@Param("id") id: string, @Req() req: Request) {
+    const user = req.user as { userId: string } | undefined;
+    return this.threads.recordView(id, user?.userId);
   }
 
   @Post()

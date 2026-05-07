@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, NotFoundException, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
@@ -33,6 +33,34 @@ export class AdminThreadsController {
         author: { id: t.author.id, displayName: t.author.name, avatarUrl: t.author.avatarUrl },
       })),
       nextCursor: null,
+    };
+  }
+
+  @Get(":id")
+  async getOne(@Param("id") id: string) {
+    const t = await this.threadsRepo.findOne({
+      where: { id },
+      relations: { attachments: true },
+    });
+    if (!t) throw new NotFoundException("Thread not found");
+    return {
+      id: t.id,
+      title: t.title,
+      content: t.content,
+      excerpt: t.excerpt,
+      category: t.category,
+      tags: t.tags ?? [],
+      status: t.status,
+      counts: { repliesCount: t.repliesCount, viewsCount: t.viewsCount, likesCount: t.likesCount },
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+      author: { id: t.author.id, displayName: t.author.name, avatarUrl: t.author.avatarUrl },
+      attachments: (t.attachments ?? []).map((a) => ({
+        id: a.id,
+        url: a.url,
+        mimeType: a.mimeType,
+        sizeBytes: a.sizeBytes,
+      })),
     };
   }
 
