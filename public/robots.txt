@@ -1,0 +1,19 @@
+# Threadly - https://threadly.app
+# Crawler directives for the public forum.
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /change-password
+Disallow: /settings
+Disallow: /settings/
+Disallow: /new
+Disallow: /api/
+
+# Static sitemap (always available). The dynamic one (with thread URLs) is
+# served by the backend at /api/seo/sitemap.xml when deployed together.
+Sitemap: /sitemap.xml
+Sitemap: /api/seo/sitemap.xml

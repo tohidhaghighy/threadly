@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider } from "@/lib/i18n";
 import { AppQueryProvider } from "@/lib/query";
 import { AuthProvider } from "@/lib/auth";
+import { buildSeo } from "@/lib/seo";
 
 function NotFoundComponent() {
   return (
@@ -28,45 +29,36 @@ function NotFoundComponent() {
   );
 }
 
+const ROOT_DESCRIPTION =
+  "Threadly is a community forum for PC builders: ask questions, share builds, and get expert answers.";
+
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Threadly — Build, Ask, Answer" },
-      {
-        name: "description",
-        content:
-          "Threadly is a community forum for PC builders: ask questions, share builds, and get expert answers.",
-      },
-      { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" },
-      { name: "theme-color", content: "#f97316" },
-      { name: "color-scheme", content: "dark light" },
-      { name: "application-name", content: "Threadly" },
-      { name: "google", content: "notranslate" },
-
-      // Open Graph (social share)
-      { property: "og:site_name", content: "Threadly" },
-      { property: "og:type", content: "website" },
-      { property: "og:locale", content: "en_US" },
-      { property: "og:title", content: "Threadly — Build, Ask, Answer" },
-      {
-        property: "og:description",
-        content:
-          "Threadly is a community forum for PC builders: ask questions, share builds, and get expert answers.",
-      },
-
-      // Twitter cards
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Threadly — Build, Ask, Answer" },
-      {
-        name: "twitter:description",
-        content:
-          "Threadly is a community forum for PC builders: ask questions, share builds, and get expert answers.",
-      },
-    ],
-    links: [{ rel: "stylesheet", href: appCss }],
-  }),
+  head: () => {
+    const seo = buildSeo({
+      titleAbsolute: "Threadly — Build, Ask, Answer",
+      description: ROOT_DESCRIPTION,
+      path: "/",
+      type: "website",
+      locale: "fa_IR",
+    });
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { name: "theme-color", content: "#f97316" },
+        { name: "color-scheme", content: "dark light" },
+        { name: "application-name", content: "Threadly" },
+        { name: "google", content: "notranslate" },
+        ...seo.meta,
+      ],
+      links: [
+        { rel: "stylesheet", href: appCss },
+        { rel: "icon", href: "/favicon.svg" },
+        { rel: "shortcut icon", href: "/favicon.svg" },
+        ...seo.links,
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,

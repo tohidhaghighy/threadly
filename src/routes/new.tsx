@@ -13,20 +13,21 @@ import { categories as mockCategories } from "@/lib/mock-data";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, tStatic } from "@/lib/i18n";
 import type { ApiError } from "@/lib/api";
 import { useCategories } from "@/lib/categories";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/new")({
-  head: () => ({
-    meta: [
-      { title: "ایجاد موضوع — Threadly" },
-      {
-        name: "description",
-        content: "ایجاد سؤال جدید در Threadly. موضوعات جدید پس از تأیید مدیر منتشر می‌شوند.",
-      },
-    ],
-  }),
+  head: () => {
+    const seo = buildSeo({
+      titleAbsolute: tStatic("new.metaTitle"),
+      description: tStatic("new.metaDescription"),
+      path: "/new",
+      noindex: true,
+    });
+    return { meta: seo.meta, links: seo.links };
+  },
   component: NewTopic,
 });
 
@@ -34,7 +35,8 @@ function NewTopic() {
   const [submitted, setSubmitted] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<string | null>(null);
-  const [tags, setTags] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const auth = useAuth();
@@ -61,13 +63,13 @@ function NewTopic() {
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-warning/15">
           <Clock className="h-10 w-10 text-warning" />
         </div>
-        <Badge className="mt-4 bg-warning/20 text-warning border border-warning/30">در انتظار تأیید</Badge>
-        <h1 className="mt-4 text-3xl font-extrabold">موضوع شما ارسال شد</h1>
-        <p className="mt-2 text-muted-foreground">
-          پس از بررسی مدیران، موضوع شما منتشر می‌شود (معمولاً کمتر از ۲۴ ساعت).
-        </p>
+        <Badge className="mt-4 bg-warning/20 text-warning border border-warning/30">
+          {t("new.submittedBadge")}
+        </Badge>
+        <h1 className="mt-4 text-3xl font-extrabold">{t("new.submittedTitle")}</h1>
+        <p className="mt-2 text-muted-foreground">{t("new.submittedDesc")}</p>
         <Button variant="hero" className="mt-6" onClick={() => setSubmitted(false)}>
-          ایجاد موضوع جدید
+          {t("new.submittedAgain")}
         </Button>
       </div>
     );
@@ -89,7 +91,7 @@ function NewTopic() {
         onSubmit={async (e) => {
           e.preventDefault();
           if (!auth.token) {
-            toast.error("لطفاً برای ایجاد موضوع وارد شوید.");
+            toast.error(t("new.toastLoginRequired"));
             return;
           }
           if (!category) return;
@@ -97,11 +99,11 @@ function NewTopic() {
           const trimmedTitle = title.trim();
           const trimmedContent = content.trim();
           if (trimmedTitle.length < 10) {
-            toast.error("عنوان باید حداقل ۱۰ کاراکتر باشد.");
+            toast.error(t("new.errorTitleMin"));
             return;
           }
           if (trimmedContent.length < 10) {
-            toast.error("جزئیات باید حداقل ۱۰ کاراکتر باشد.");
+            toast.error(t("new.errorContentMin"));
             return;
           }
 
@@ -113,10 +115,7 @@ function NewTopic() {
                 title: trimmedTitle,
                 content: trimmedContent,
                 category,
-                tags: tags
-                  .split(",")
-                  .map((x) => x.trim())
-                  .filter(Boolean),
+                tags: selectedTags,
                 language: "fa",
               }),
             });
@@ -135,31 +134,31 @@ function NewTopic() {
           toast.success(t("new.toastSubmitted"));
           } catch (err) {
             const e = err as ApiError;
-            if (e?.status === 400) toast.error("اطلاعات وارد شده معتبر نیست.");
-            else if (e?.status === 401) toast.error("جلسه شما منقضی شده است. دوباره وارد شوید.");
-            else toast.error(e?.message ?? "خطا در ارسال موضوع");
+            if (e?.status === 400) toast.error(t("new.errorInvalidData"));
+            else if (e?.status === 401) toast.error(t("new.errorSessionExpired"));
+            else toast.error(e?.message ?? t("new.errorSubmitFailed"));
           }
         }}
         className="mt-8 space-y-6 rounded-2xl border border-border/60 bg-card p-6 shadow-card md:p-8"
       >
         <div className="grid gap-2">
-          <Label htmlFor="title" className="text-sm font-semibold">Title</Label>
+          <Label htmlFor="title" className="text-sm font-semibold">{t("new.field.title")}</Label>
           <Input
             id="title"
             required
-            placeholder="e.g. PC won’t boot after installing RTX 4080"
+            placeholder={t("new.field.titlePlaceholder")}
             className="h-12 border-border/70 bg-background/70 text-base shadow-sm backdrop-blur focus-visible:ring-primary/60"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
-          <p className="text-xs text-muted-foreground">Pick a clear title (at least 10 characters)</p>
+          <p className="text-xs text-muted-foreground">{t("new.field.titleHint")}</p>
         </div>
 
         <div className="grid gap-2">
-          <Label className="text-sm font-semibold">Category</Label>
+          <Label className="text-sm font-semibold">{t("new.field.category")}</Label>
           <Select required onValueChange={(v) => setCategory(categories.find((c) => c.id === v)?.title ?? null)}>
             <SelectTrigger className="h-12 border-border/70 bg-background/70 shadow-sm backdrop-blur focus:ring-primary/60">
-              <SelectValue placeholder="Select a category" />
+              <SelectValue placeholder={t("new.field.categoryPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {(categoriesQuery.isLoading ? [] : categories).map((c) => {
@@ -178,17 +177,62 @@ function NewTopic() {
         </div>
 
         <div className="grid gap-2">
-          <Label className="text-sm font-semibold">Tags</Label>
-          <Input
-            placeholder="Comma-separated: GPU, Cooling, FPS"
-            className="h-12 border-border/70 bg-background/70 shadow-sm backdrop-blur focus-visible:ring-primary/60"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-          />
+          <Label className="text-sm font-semibold">{t("new.field.tags")}</Label>
+          <div className="rounded-xl border border-border/70 bg-background/70 p-3 shadow-sm backdrop-blur">
+            <div className="flex flex-wrap gap-2">
+              {selectedTags.length ? (
+                selectedTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="group"
+                    onClick={() => setSelectedTags((prev) => prev.filter((t2) => t2 !== tag))}
+                    title="حذف تگ"
+                  >
+                    <Badge className="bg-primary/15 text-primary border border-primary/30 group-hover:bg-destructive/15 group-hover:text-destructive group-hover:border-destructive/30">
+                      #{tag}
+                    </Badge>
+                  </button>
+                ))
+              ) : (
+                <span className="text-xs text-muted-foreground">{t("new.field.tagsPlaceholder")}</span>
+              )}
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <Input
+                placeholder="افزودن تگ (Enter)"
+                className="h-10 border-border/70 bg-background/60 shadow-none"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter") return;
+                  e.preventDefault();
+                  const tag = tagInput.trim().toLowerCase();
+                  if (!tag) return;
+                  setSelectedTags((prev) => (prev.includes(tag) ? prev : [...prev, tag]));
+                  setTagInput("");
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10"
+                onClick={() => {
+                  const tag = tagInput.trim().toLowerCase();
+                  if (!tag) return;
+                  setSelectedTags((prev) => (prev.includes(tag) ? prev : [...prev, tag]));
+                  setTagInput("");
+                }}
+              >
+                افزودن
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-2">
-          <Label className="text-sm font-semibold">Details</Label>
+          <Label className="text-sm font-semibold">{t("new.field.details")}</Label>
           <div className="overflow-hidden rounded-lg border border-border/70 bg-background/70 shadow-sm backdrop-blur">
             <div className="flex flex-wrap items-center gap-1 border-b border-border bg-muted/40 px-2 py-1.5">
               <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Bold className="h-4 w-4" /></Button>
@@ -198,12 +242,12 @@ function NewTopic() {
               <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Code2 className="h-4 w-4" /></Button>
               <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><ImageIcon className="h-4 w-4" /></Button>
               <div className="ms-auto">
-                <Button type="button" variant="ghost" size="sm"><Eye className="h-4 w-4" /> Preview</Button>
+                <Button type="button" variant="ghost" size="sm"><Eye className="h-4 w-4" /> {t("new.preview")}</Button>
               </div>
             </div>
             <Textarea
               required
-              placeholder="Write the full details: specs, errors, and what you already tried..."
+              placeholder={t("new.field.detailsPlaceholder")}
               className="min-h-64 resize-none border-0 bg-transparent text-base focus-visible:ring-0"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -212,7 +256,7 @@ function NewTopic() {
         </div>
 
         <div className="grid gap-2">
-          <Label className="text-sm font-semibold">Images</Label>
+          <Label className="text-sm font-semibold">{t("new.images")}</Label>
           <div className="rounded-lg border-2 border-dashed border-border/70 bg-background/60 p-4 shadow-sm backdrop-blur transition hover:border-primary/50 hover:bg-primary/5">
             <input
               id="images"
@@ -224,7 +268,7 @@ function NewTopic() {
                 const files = Array.from(e.target.files ?? []);
                 const onlyImages = files.filter((f) => f.type.startsWith("image/"));
                 if (onlyImages.length !== files.length) {
-                  toast.error("Only image files are allowed.");
+                  toast.error(t("new.imagesOnlyError"));
                 }
                 setImages((prev) => [...prev, ...onlyImages]);
                 e.currentTarget.value = "";
@@ -236,9 +280,9 @@ function NewTopic() {
               className="flex cursor-pointer flex-col items-center justify-center px-4 py-6 text-center"
             >
               <Upload className="h-8 w-8 text-muted-foreground" />
-              <p className="mt-2 text-sm font-medium">Click to select images</p>
+              <p className="mt-2 text-sm font-medium">{t("new.imagesCta")}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Any image format (PNG, JPG, GIF, WEBP, SVG, ...) — UI only
+                {t("new.imagesHint")}
               </p>
             </label>
 
@@ -258,7 +302,7 @@ function NewTopic() {
                         setImages((prev) => prev.filter((f) => f !== file));
                       }}
                     >
-                      Remove
+                      {t("new.remove")}
                     </button>
                   </div>
                 ))}

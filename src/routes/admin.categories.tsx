@@ -1,23 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { FolderTree, Pencil, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +20,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { buildSeo } from "@/lib/seo";
 
 type CategoryAdminItem = {
   id: string;
@@ -38,23 +36,27 @@ type CategoryAdminItem = {
 };
 
 export const Route = createFileRoute("/admin/categories")({
-  head: () => ({
-    meta: [
-      { title: "مدیریت دسته‌بندی‌ها — Threadly" },
-      { name: "description", content: "مدیریت دسته‌بندی‌ها در Threadly." },
-    ],
-  }),
+  head: () => {
+    const seo = buildSeo({
+      title: "مدیریت دسته‌بندی‌ها",
+      description: "مدیریت دسته‌بندی‌ها در Threadly.",
+      path: "/admin/categories",
+      noindex: true,
+    });
+    return { meta: seo.meta, links: seo.links };
+  },
   component: AdminCategoriesPage,
 });
 
 function AdminCategoriesPage() {
   const auth = useAuth();
   const qc = useQueryClient();
-  const [q, setQ] = useState("");
+  const { t } = useI18n();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<CategoryAdminItem | null>(null);
+  const [patchingId, setPatchingId] = useState<string | null>(null);
 
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
@@ -69,16 +71,14 @@ function AdminCategoriesPage() {
   };
 
   const categoriesQuery = useQuery({
-    queryKey: ["adminCategories", q],
-    queryFn: async () => {
-      const qs = new URLSearchParams();
-      if (q.trim()) qs.set("q", q.trim());
-      return api<{ items: CategoryAdminItem[] }>(`/api/admin/categories?${qs.toString()}`, { auth: true });
-    },
+    queryKey: ["adminCategories"],
+    queryFn: async () => api<{ items: CategoryAdminItem[] }>(`/api/admin/categories`, { auth: true }),
     enabled: auth.isAdmin,
   });
 
   const items = useMemo(() => categoriesQuery.data?.items ?? [], [categoriesQuery.data?.items]);
+
+  const maxOrder = useMemo(() => items.reduce((m, c) => Math.max(m, c.order ?? 0), 0), [items]);
 
   const createMut = useMutation({
     mutationFn: async () => {
@@ -97,13 +97,13 @@ function AdminCategoriesPage() {
       });
     },
     onSuccess: async () => {
-      toast.success("دسته‌بندی ایجاد شد");
+      toast.success(t("adminCategories.toastCreated"));
       setCreateOpen(false);
       resetForm();
       await qc.invalidateQueries({ queryKey: ["adminCategories"] });
-      await qc.invalidateQueries({ queryKey: ["categories", "counts"] });
+      await qc.invalidateQueries({ queryKey: ["categories"] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "خطا در ایجاد دسته‌بندی"),
+    onError: (e: unknown) => toast.error((e as { message?: string })?.message ?? t("adminCategories.errorCreate")),
   });
 
   const updateMut = useMutation({
@@ -124,180 +124,174 @@ function AdminCategoriesPage() {
       });
     },
     onSuccess: async () => {
-      toast.success("دسته‌بندی به‌روزرسانی شد");
+      toast.success(t("adminCategories.toastUpdated"));
       setEditOpen(false);
       setEditing(null);
       await qc.invalidateQueries({ queryKey: ["adminCategories"] });
-      await qc.invalidateQueries({ queryKey: ["categories", "counts"] });
+      await qc.invalidateQueries({ queryKey: ["categories"] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "خطا در به‌روزرسانی دسته‌بندی"),
+    onError: (e: unknown) => toast.error((e as { message?: string })?.message ?? t("adminCategories.errorUpdate")),
   });
 
-  const deleteMut = useMutation({
-    mutationFn: (id: string) => api(`/api/admin/categories/${id}`, { method: "DELETE", auth: true }),
-    onSuccess: async () => {
-      toast.success("دسته‌بندی حذف شد");
+  const toggleActive = async (c: CategoryAdminItem, next: boolean) => {
+    setPatchingId(c.id);
+    try {
+      await api(`/api/admin/categories/${c.id}`, {
+        method: "PATCH",
+        auth: true,
+        body: JSON.stringify({ isActive: next }),
+      });
       await qc.invalidateQueries({ queryKey: ["adminCategories"] });
-      await qc.invalidateQueries({ queryKey: ["categories", "counts"] });
-    },
-    onError: (e: any) => toast.error(e?.message ?? "خطا در حذف دسته‌بندی"),
-  });
+      await qc.invalidateQueries({ queryKey: ["categories"] });
+    } catch (e: unknown) {
+      toast.error((e as { message?: string })?.message ?? t("adminCategories.errorToggle"));
+    } finally {
+      setPatchingId(null);
+    }
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setFormOrder(String(maxOrder + 1));
+    setCreateOpen(true);
+  };
+
+  const openEdit = (c: CategoryAdminItem) => {
+    setEditing(c);
+    setFormTitle(c.title);
+    setFormDescription(c.description ?? "");
+    setFormOrder(String(c.order ?? 0));
+    setFormActive(c.isActive);
+    setEditOpen(true);
+  };
 
   if (!auth.isAdmin) {
     return (
       <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-8">
         <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card">
-          <div className="text-lg font-extrabold">دسترسی مدیر لازم است</div>
-          <p className="mt-1 text-sm text-muted-foreground">برای مدیریت دسته‌بندی‌ها باید با حساب مدیر وارد شوید.</p>
+          <div className="text-lg font-extrabold">{t("adminCategories.accessTitle")}</div>
+          <p className="mt-1 text-sm text-muted-foreground">{t("adminCategories.accessDesc")}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-8">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold">مدیریت دسته‌بندی‌ها</h1>
-          <p className="mt-1 text-sm text-muted-foreground">افزودن، ویرایش، فعال/غیرفعال و حذف دسته‌بندی‌ها</p>
+          <h1 className="text-2xl font-extrabold">{t("adminCategories.title")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("adminCategories.subtitle")}</p>
         </div>
-        <div className="flex w-full gap-2 md:w-auto">
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="جستجو..." className="h-10 md:w-64" />
-          <Button
-            variant="hero"
-            onClick={() => {
-              resetForm();
-              setCreateOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            افزودن
-          </Button>
-        </div>
+        <Button variant="hero" className="shrink-0 gap-2" onClick={openCreate}>
+          <Plus className="h-4 w-4" />
+          {t("adminCategories.new")}
+        </Button>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-border/60 bg-card p-4 shadow-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="text-start">عنوان</TableHead>
-              <TableHead className="text-start">توضیح</TableHead>
-              <TableHead className="text-start">ترتیب</TableHead>
-              <TableHead className="text-start">فعال</TableHead>
-              <TableHead className="text-start">تعداد گفتگو</TableHead>
-              <TableHead className="text-end">عملیات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {categoriesQuery.isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                  در حال بارگذاری...
-                </TableCell>
-              </TableRow>
-            ) : items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                  دسته‌بندی‌ای پیدا نشد.
-                </TableCell>
-              </TableRow>
-            ) : (
-              items.map((c) => (
-                <TableRow key={c.id} className="hover:bg-muted/30">
-                  <TableCell className="font-medium">{c.title}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{c.description ?? "—"}</TableCell>
-                  <TableCell className="text-sm">{c.order.toLocaleString("fa-IR")}</TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={c.isActive}
-                      onCheckedChange={(v) => {
-                        void api(`/api/admin/categories/${c.id}`, {
-                          method: "PATCH",
-                          auth: true,
-                          body: JSON.stringify({ isActive: v }),
-                        })
-                          .then(async () => {
-                            await qc.invalidateQueries({ queryKey: ["adminCategories"] });
-                            await qc.invalidateQueries({ queryKey: ["categories", "counts"] });
-                          })
-                          .catch((e: any) => toast.error(e?.message ?? "خطا"));
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {c.threadsCount.toLocaleString("fa-IR")}
-                  </TableCell>
-                  <TableCell className="text-end">
-                    <div className="inline-flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditing(c);
-                          setFormTitle(c.title);
-                          setFormDescription(c.description ?? "");
-                          setFormOrder(String(c.order ?? 0));
-                          setFormActive(c.isActive);
-                          setEditOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        ویرایش
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={deleteMut.isPending}
-                        onClick={() => deleteMut.mutate(c.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        حذف
-                      </Button>
+      <div className="mt-8">
+        {categoriesQuery.isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-44 rounded-xl" />
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/20 py-16 text-center">
+            <FolderTree className="h-12 w-12 text-muted-foreground/50" />
+            <p className="mt-4 text-sm font-medium text-muted-foreground">{t("adminCategories.empty")}</p>
+            <Button variant="hero" className="mt-4 gap-2" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              {t("adminCategories.new")}
+            </Button>
+          </div>
+        ) : (
+          <ul className="grid list-none gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((c) => (
+              <li key={c.id}>
+                <Card
+                  className={cn(
+                    "flex h-full flex-col overflow-hidden transition-opacity",
+                    !c.isActive && "border-dashed opacity-75",
+                  )}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-lg leading-snug">{c.title}</CardTitle>
+                      <Badge variant={c.isActive ? "default" : "secondary"} className="shrink-0">
+                        {c.isActive ? t("adminCategories.badgeActive") : t("adminCategories.badgeInactive")}
+                      </Badge>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                    {c.description ? (
+                      <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
+                    ) : null}
+                  </CardHeader>
+                  <CardContent className="flex flex-1 flex-col gap-4 pb-2 pt-0">
+                    <p className="text-sm text-muted-foreground">
+                      {t("adminCategories.threadCount", { count: c.threadsCount.toLocaleString("fa-IR") })}
+                    </p>
+                    <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+                      <div className="text-sm font-medium">{t("adminCategories.activeShort")}</div>
+                      <Switch
+                        checked={c.isActive}
+                        disabled={patchingId === c.id}
+                        onCheckedChange={(v) => void toggleActive(c, v)}
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter className="border-t border-border/40 pt-4">
+                    <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => openEdit(c)}>
+                      <Pencil className="h-4 w-4" />
+                      {t("adminCategories.rename")}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>افزودن دسته‌بندی</DialogTitle>
+            <DialogTitle>{t("adminCategories.createTitle")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label>عنوان</Label>
-              <Input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder="مثلاً: کارت گرافیک" />
-            </div>
-            <div className="grid gap-2">
-              <Label>توضیح</Label>
+              <Label>{t("adminCategories.fieldTitle")}</Label>
               <Input
-                value={formDescription}
-                onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="مثلاً: بحث درباره GPU و درایورها"
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder={t("adminCategories.fieldTitlePh")}
               />
             </div>
             <div className="grid gap-2">
-              <Label>ترتیب</Label>
+              <Label>{t("adminCategories.fieldDesc")}</Label>
+              <Input
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder={t("adminCategories.fieldDescPh")}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>{t("adminCategories.fieldOrder")}</Label>
               <Input value={formOrder} onChange={(e) => setFormOrder(e.target.value)} inputMode="numeric" />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-3">
               <div>
-                <div className="text-sm font-semibold">فعال باشد</div>
-                <div className="text-xs text-muted-foreground">در لیست عمومی نمایش داده شود</div>
+                <div className="text-sm font-semibold">{t("adminCategories.activeInForm")}</div>
+                <div className="text-xs text-muted-foreground">{t("adminCategories.activeHint")}</div>
               </div>
               <Switch checked={formActive} onCheckedChange={setFormActive} />
             </div>
           </div>
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              انصراف
+              {t("adminCategories.cancel")}
             </Button>
             <Button variant="hero" disabled={createMut.isPending || formTitle.trim().length < 2} onClick={() => createMut.mutate()}>
-              ایجاد
+              {t("adminCategories.createBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -312,35 +306,35 @@ function AdminCategoriesPage() {
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>ویرایش دسته‌بندی</DialogTitle>
+            <DialogTitle>{t("adminCategories.editTitle")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label>عنوان</Label>
+              <Label>{t("adminCategories.fieldTitle")}</Label>
               <Input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} />
             </div>
             <div className="grid gap-2">
-              <Label>توضیح</Label>
+              <Label>{t("adminCategories.fieldDesc")}</Label>
               <Input value={formDescription} onChange={(e) => setFormDescription(e.target.value)} />
             </div>
             <div className="grid gap-2">
-              <Label>ترتیب</Label>
+              <Label>{t("adminCategories.fieldOrder")}</Label>
               <Input value={formOrder} onChange={(e) => setFormOrder(e.target.value)} inputMode="numeric" />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-3">
               <div>
-                <div className="text-sm font-semibold">فعال باشد</div>
-                <div className="text-xs text-muted-foreground">در لیست عمومی نمایش داده شود</div>
+                <div className="text-sm font-semibold">{t("adminCategories.activeInForm")}</div>
+                <div className="text-xs text-muted-foreground">{t("adminCategories.activeHint")}</div>
               </div>
               <Switch checked={formActive} onCheckedChange={setFormActive} />
             </div>
           </div>
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setEditOpen(false)}>
-              بستن
+              {t("adminCategories.close")}
             </Button>
             <Button variant="hero" disabled={updateMut.isPending || !editing} onClick={() => updateMut.mutate()}>
-              ذخیره
+              {t("adminCategories.saveBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -348,4 +342,3 @@ function AdminCategoriesPage() {
     </div>
   );
 }
-

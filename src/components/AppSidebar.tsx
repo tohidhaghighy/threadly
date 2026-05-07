@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, MessageSquare, PlusCircle, ShieldCheck, Users, Settings, Cpu, Tags, HelpCircle } from "lucide-react";
+import { Home, MessageSquare, PlusCircle, ShieldCheck, Users, Settings, Cpu, Tags, HelpCircle, MessageSquareText } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -53,6 +53,7 @@ export function AppSidebar() {
                 { title: t("nav.home"), url: "/", icon: Home },
                 { title: t("nav.threads"), url: "/threads", icon: MessageSquare },
                 { title: t("nav.newThread"), url: "/new", icon: PlusCircle },
+                { title: t("nav.users"), url: "/users", icon: Users },
               ].map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
@@ -105,10 +106,10 @@ export function AppSidebar() {
                 {[
                   { title: t("nav.admin"), url: "/admin", icon: ShieldCheck },
                   { title: "دسته‌بندی‌ها", url: "/admin/categories", icon: Tags },
-                  { title: t("nav.users"), url: "/admin", icon: Users },
+                  { title: "کامنت‌ها", url: "/admin/comments", icon: MessageSquareText },
                   { title: t("nav.settings"), url: "/admin", icon: Settings },
                 ].map((item) => (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
                       <Link to={item.url}>
                         <item.icon />

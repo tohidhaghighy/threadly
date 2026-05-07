@@ -9,19 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UsersRouteImport } from './routes/users'
 import { Route as ThreadsRouteImport } from './routes/threads'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChangePasswordRouteImport } from './routes/change-password'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UsersIndexRouteImport } from './routes/users.index'
+import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as UsersIdRouteImport } from './routes/users.$id'
 import { Route as ThreadsIdRouteImport } from './routes/threads.$id'
+import { Route as AdminCommentsRouteImport } from './routes/admin.comments'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ThreadsRoute = ThreadsRouteImport.update({
   id: '/threads',
   path: '/threads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -54,10 +71,35 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UsersIndexRoute = UsersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UsersRoute,
+} as any)
+const ThreadsIndexRoute = ThreadsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ThreadsRoute,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const UsersIdRoute = UsersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => UsersRoute,
+} as any)
 const ThreadsIdRoute = ThreadsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ThreadsRoute,
+} as any)
+const AdminCommentsRoute = AdminCommentsRouteImport.update({
+  id: '/comments',
+  path: '/comments',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   id: '/categories',
@@ -72,9 +114,16 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/register': typeof RegisterRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/threads': typeof ThreadsRouteWithChildren
+  '/users': typeof UsersRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/comments': typeof AdminCommentsRoute
   '/threads/$id': typeof ThreadsIdRoute
+  '/users/$id': typeof UsersIdRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/threads/': typeof ThreadsIndexRoute
+  '/users/': typeof UsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,9 +132,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/register': typeof RegisterRoute
-  '/threads': typeof ThreadsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/comments': typeof AdminCommentsRoute
   '/threads/$id': typeof ThreadsIdRoute
+  '/users/$id': typeof UsersIdRoute
+  '/settings': typeof SettingsIndexRoute
+  '/threads': typeof ThreadsIndexRoute
+  '/users': typeof UsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,9 +148,16 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/register': typeof RegisterRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/threads': typeof ThreadsRouteWithChildren
+  '/users': typeof UsersRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/comments': typeof AdminCommentsRoute
   '/threads/$id': typeof ThreadsIdRoute
+  '/users/$id': typeof UsersIdRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/threads/': typeof ThreadsIndexRoute
+  '/users/': typeof UsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,9 +168,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/new'
     | '/register'
+    | '/settings'
     | '/threads'
+    | '/users'
     | '/admin/categories'
+    | '/admin/comments'
     | '/threads/$id'
+    | '/users/$id'
+    | '/settings/'
+    | '/threads/'
+    | '/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -119,9 +186,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/new'
     | '/register'
-    | '/threads'
     | '/admin/categories'
+    | '/admin/comments'
     | '/threads/$id'
+    | '/users/$id'
+    | '/settings'
+    | '/threads'
+    | '/users'
   id:
     | '__root__'
     | '/'
@@ -130,9 +201,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/new'
     | '/register'
+    | '/settings'
     | '/threads'
+    | '/users'
     | '/admin/categories'
+    | '/admin/comments'
     | '/threads/$id'
+    | '/users/$id'
+    | '/settings/'
+    | '/threads/'
+    | '/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -142,16 +220,32 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   NewRoute: typeof NewRoute
   RegisterRoute: typeof RegisterRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   ThreadsRoute: typeof ThreadsRouteWithChildren
+  UsersRoute: typeof UsersRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/threads': {
       id: '/threads'
       path: '/threads'
       fullPath: '/threads'
       preLoaderRoute: typeof ThreadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -196,12 +290,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/users/': {
+      id: '/users/'
+      path: '/'
+      fullPath: '/users/'
+      preLoaderRoute: typeof UsersIndexRouteImport
+      parentRoute: typeof UsersRoute
+    }
+    '/threads/': {
+      id: '/threads/'
+      path: '/'
+      fullPath: '/threads/'
+      preLoaderRoute: typeof ThreadsIndexRouteImport
+      parentRoute: typeof ThreadsRoute
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/users/$id': {
+      id: '/users/$id'
+      path: '/$id'
+      fullPath: '/users/$id'
+      preLoaderRoute: typeof UsersIdRouteImport
+      parentRoute: typeof UsersRoute
+    }
     '/threads/$id': {
       id: '/threads/$id'
       path: '/$id'
       fullPath: '/threads/$id'
       preLoaderRoute: typeof ThreadsIdRouteImport
       parentRoute: typeof ThreadsRoute
+    }
+    '/admin/comments': {
+      id: '/admin/comments'
+      path: '/comments'
+      fullPath: '/admin/comments'
+      preLoaderRoute: typeof AdminCommentsRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/categories': {
       id: '/admin/categories'
@@ -215,24 +344,52 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminCommentsRoute: typeof AdminCommentsRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminCommentsRoute: AdminCommentsRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface SettingsRouteChildren {
+  SettingsIndexRoute: typeof SettingsIndexRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsIndexRoute: SettingsIndexRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 interface ThreadsRouteChildren {
   ThreadsIdRoute: typeof ThreadsIdRoute
+  ThreadsIndexRoute: typeof ThreadsIndexRoute
 }
 
 const ThreadsRouteChildren: ThreadsRouteChildren = {
   ThreadsIdRoute: ThreadsIdRoute,
+  ThreadsIndexRoute: ThreadsIndexRoute,
 }
 
 const ThreadsRouteWithChildren =
   ThreadsRoute._addFileChildren(ThreadsRouteChildren)
+
+interface UsersRouteChildren {
+  UsersIdRoute: typeof UsersIdRoute
+  UsersIndexRoute: typeof UsersIndexRoute
+}
+
+const UsersRouteChildren: UsersRouteChildren = {
+  UsersIdRoute: UsersIdRoute,
+  UsersIndexRoute: UsersIndexRoute,
+}
+
+const UsersRouteWithChildren = UsersRoute._addFileChildren(UsersRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -241,7 +398,9 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   NewRoute: NewRoute,
   RegisterRoute: RegisterRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   ThreadsRoute: ThreadsRouteWithChildren,
+  UsersRoute: UsersRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

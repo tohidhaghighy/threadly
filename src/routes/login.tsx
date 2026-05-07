@@ -13,16 +13,20 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import type { ApiError } from "@/lib/api";
+import { buildSeo } from "@/lib/seo";
 
 type LoginValues = { email: string; password: string };
 
 export const Route = createFileRoute("/login")({
-  head: () => ({
-    meta: [
-      { title: "ورود — Threadly" },
-      { name: "description", content: "ورود به حساب کاربری در Threadly." },
-    ],
-  }),
+  head: () => {
+    const seo = buildSeo({
+      title: "ورود",
+      description: "ورود به حساب کاربری در Threadly.",
+      path: "/login",
+      noindex: true,
+    });
+    return { meta: seo.meta, links: seo.links };
+  },
   component: LoginPage,
 });
 

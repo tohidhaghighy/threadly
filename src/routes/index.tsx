@@ -14,18 +14,19 @@ import { ThreadCardSkeleton } from "@/components/skeletons/ThreadCardSkeleton";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api, type ThreadListItem } from "@/lib/api";
 import { useCategories } from "@/lib/categories";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Threadly — انجمن ساخت PC" },
-      {
-        name: "description",
-        content:
-          "در Threadly سوال بپرسید، تجربه و اسمبل خود را به اشتراک بگذارید و پاسخ بگیرید.",
-      },
-    ],
-  }),
+  head: () => {
+    const seo = buildSeo({
+      titleAbsolute: "Threadly — انجمن ساخت کیس",
+      description:
+        "در Threadly سوال بپرسید، تجربه و اسمبل خود را به اشتراک بگذارید و پاسخ بگیرید.",
+      path: "/",
+      type: "website",
+    });
+    return { meta: seo.meta, links: seo.links };
+  },
   component: Index,
 });
 
@@ -79,7 +80,11 @@ function Index() {
   const mapToCard = (t: ThreadListItem) => ({
     id: t.id,
     title: t.title,
-    author: { name: t.author.displayName, avatar: (t.author.displayName[0] ?? "ک").toUpperCase() },
+    author: {
+      name: t.author.displayName,
+      avatar: (t.author.displayName[0] ?? "ک").toUpperCase(),
+      avatarUrl: t.author.avatarUrl,
+    },
     category: t.category,
     tags: t.tags ?? [],
     replies: t.counts.repliesCount,
@@ -150,7 +155,7 @@ function Index() {
                 <Sparkles className="me-1 h-3 w-3" /> انجمن رسمی Threadly
               </Badge>
               <h1 className="mt-4 text-3xl font-extrabold leading-tight md:text-5xl">
-                هر آنچه برای ساختن <span className="text-gradient-primary">PC رویایی</span> نیاز دارید
+                هر آنچه برای ساختن <span className="text-gradient-primary">کیس رویایی</span> نیاز دارید
               </h1>
               <p className="mt-3 max-w-2xl text-base text-muted-foreground md:text-lg">
                 از انتخاب قطعات و اسمبل تا عیب‌یابی و بهینه‌سازی عملکرد—به جامعه‌ای از بیلدرها بپیوندید که به هم کمک می‌کنند.
@@ -327,7 +332,11 @@ function Index() {
                         style={{ animationDelay: `${i * 60}ms` }}
                       />
                     ))
-                  : newest.map((t) => <ThreadCard key={t.id} thread={t} />)}
+                  : newest.map((t) => (
+                      <Link key={t.id} to="/threads/$id" params={{ id: t.id }} hash="replies" className="block">
+                        <ThreadCard thread={t} />
+                      </Link>
+                    ))}
 
                 <div ref={newestSentinelRef} />
                 {newestQuery.isFetchingNextPage ? (
@@ -346,7 +355,11 @@ function Index() {
                         style={{ animationDelay: `${i * 60}ms` }}
                       />
                     ))
-                  : mostReplied.map((t) => <ThreadCard key={t.id} thread={t} />)}
+                  : mostReplied.map((t) => (
+                      <Link key={t.id} to="/threads/$id" params={{ id: t.id }} hash="replies" className="block">
+                        <ThreadCard thread={t} />
+                      </Link>
+                    ))}
               </div>
             </TabsContent>
 
@@ -360,7 +373,11 @@ function Index() {
                         style={{ animationDelay: `${i * 60}ms` }}
                       />
                     ))
-                  : mostViewed.map((t) => <ThreadCard key={t.id} thread={t} />)}
+                  : mostViewed.map((t) => (
+                      <Link key={t.id} to="/threads/$id" params={{ id: t.id }} hash="replies" className="block">
+                        <ThreadCard thread={t} />
+                      </Link>
+                    ))}
               </div>
             </TabsContent>
 
@@ -374,7 +391,11 @@ function Index() {
                         style={{ animationDelay: `${i * 60}ms` }}
                       />
                     ))
-                  : hottest.map((t) => <ThreadCard key={t.id} thread={t} />)}
+                  : hottest.map((t) => (
+                      <Link key={t.id} to="/threads/$id" params={{ id: t.id }} hash="replies" className="block">
+                        <ThreadCard thread={t} />
+                      </Link>
+                    ))}
               </div>
             </TabsContent>
           </Tabs>

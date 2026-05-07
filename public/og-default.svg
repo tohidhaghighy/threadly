@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Threadly  community forum for PC builders">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fb923c"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.85" cy="0.15" r="0.7">
+      <stop offset="0" stop-color="#f97316" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#0b1220" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <g transform="translate(80,260)">
+    <rect x="-8" y="-8" width="116" height="116" rx="24" fill="url(#brand)" opacity="0.18"/>
+    <rect x="0" y="0" width="100" height="100" rx="20" fill="url(#brand)"/>
+    <text x="50" y="68" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" font-weight="800" font-size="56" fill="#0b1220">T</text>
+  </g>
+
+  <g transform="translate(220,260)">
+    <text font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" fill="#ffffff">
+      <tspan x="0" y="50" font-weight="800" font-size="84">Threadly</tspan>
+      <tspan x="0" y="120" font-weight="500" font-size="34" fill="#cbd5e1">Build, Ask, Answer</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(80,470)">
+    <text x="0" y="0" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
+          font-size="24" font-weight="600" fill="#94a3b8">
+      Community forum for PC builders. Share builds, troubleshoot, and earn points.
+    </text>
+  </g>
+</svg>

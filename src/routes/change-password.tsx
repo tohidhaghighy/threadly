@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
+import { buildSeo } from "@/lib/seo";
 
 const schema = z
   .object({
@@ -28,12 +29,15 @@ const schema = z
 type Values = z.infer<typeof schema>;
 
 export const Route = createFileRoute("/change-password")({
-  head: () => ({
-    meta: [
-      { title: "تغییر رمز عبور — Threadly" },
-      { name: "description", content: "تغییر رمز عبور حساب کاربری در Threadly." },
-    ],
-  }),
+  head: () => {
+    const seo = buildSeo({
+      title: "تغییر رمز عبور",
+      description: "تغییر رمز عبور حساب کاربری در Threadly.",
+      path: "/change-password",
+      noindex: true,
+    });
+    return { meta: seo.meta, links: seo.links };
+  },
   component: ChangePasswordPage,
 });
 

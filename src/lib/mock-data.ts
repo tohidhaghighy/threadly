@@ -3,7 +3,7 @@ import { Cpu, Gamepad2, Wrench, Sparkles, MonitorSpeaker, HardDrive } from "luci
 export const categories = [
   {
     id: "assembly",
-    title: "مونتاژ PC",
+    title: "مونتاژ کیس",
     description: "راهنمای ساخت، انتخاب قطعات و مونتاژ",
     icon: Cpu,
     threads: 1248,
@@ -71,7 +71,7 @@ export const threads = [
     id: "2",
     title: "بهترین چینش فن برای NZXT H7 Flow چیست؟",
     author: { name: "سارا محمدی", avatar: "SM" },
-    category: "مونتاژ PC",
+    category: "مونتاژ کیس",
     tags: ["Cooling", "Airflow", "NZXT"],
     replies: 18,
     views: 892,
@@ -108,7 +108,7 @@ export const threads = [
     id: "5",
     title: "برای Ryzen 9 7950X واترکولینگ لازم است؟",
     author: { name: "نگین حسینی", avatar: "NH" },
-    category: "مونتاژ PC",
+    category: "مونتاژ کیس",
     tags: ["AIO", "AMD", "Cooling"],
     replies: 31,
     views: 1567,
@@ -120,7 +120,7 @@ export const threads = [
     id: "6",
     title: "DDR5 6000 یا 6400 — تفاوت واقعی در بازی؟",
     author: { name: "رضا فلاحی", avatar: "RF" },
-    category: "مونتاژ PC",
+    category: "مونتاژ کیس",
     tags: ["RAM", "DDR5", "Gaming"],
     replies: 7,
     views: 312,
@@ -163,7 +163,7 @@ Crowd Density: Medium`,
 ];
 
 export const adminQueue = [
-  { id: "p1", title: "راهنمای کامل اورکلاک Ryzen 7800X3D", author: "مهدی رستمی", category: "مونتاژ PC", date: "2026-05-01", status: "pending" as const },
+  { id: "p1", title: "راهنمای کامل اورکلاک Ryzen 7800X3D", author: "مهدی رستمی", category: "مونتاژ کیس", date: "2026-05-01", status: "pending" as const },
   { id: "p2", title: "بهترین SSDهای NVMe در سال ۲۰۲۶", author: "فاطمه شریفی", category: "حافظه و ذخیره‌سازی", date: "2026-05-01", status: "pending" as const },
   { id: "p3", title: "سیستم ۱۵۰۰ دلاری برای گیمینگ 4K", author: "بهزاد کاظمی", category: "نمایش سیستم‌ها", date: "2026-04-30", status: "approved" as const },
   { id: "p4", title: "اسپم تبلیغاتی — نادیده بگیرید", author: "spammer123", category: "متفرقه", date: "2026-04-30", status: "rejected" as const },

@@ -33,7 +33,7 @@ const fa: Dict = {
 
   // home
   "home.badge": "انجمن رسمی Threadly",
-  "home.title": "هر آنچه برای ساختن PC رویایی نیاز دارید",
+  "home.title": "هر آنچه برای ساختن کیس رویایی نیاز دارید",
   "home.subtitle": "از مونتاژ کیس تا عیب‌یابی. به جامعه‌ای از بیلدرها بپیوندید و سوال بپرسید.",
   "home.ask": "شروع گفتگو",
   "home.browse": "مرور موضوعات",
@@ -62,7 +62,11 @@ const fa: Dict = {
   "new.subtitle": "سؤال یا تجربه خود را با جامعه به اشتراک بگذارید",
   "new.requiresApproval": "نیازمند تأیید مدیر",
   "new.field.title": "عنوان موضوع",
+  "new.field.titlePlaceholder": "مثال: کیس بعد از نصب کارت RTX 4080 روشن نمی‌شود",
   "new.field.titleHint": "عنوانی واضح انتخاب کنید (حداقل ۱۰ کاراکتر)",
+  "new.metaTitle": "ایجاد موضوع — Threadly",
+  "new.metaDescription":
+    "ایجاد سؤال جدید در Threadly. موضوعات جدید پس از تأیید مدیر منتشر می‌شوند.",
   "new.field.category": "دسته‌بندی",
   "new.field.categoryPlaceholder": "یک دسته انتخاب کنید",
   "new.field.tags": "برچسب‌ها",
@@ -80,6 +84,12 @@ const fa: Dict = {
   "new.submittedDesc": "پس از بررسی توسط مدیران، منتشر خواهد شد (معمولاً کمتر از ۲۴ ساعت).",
   "new.submittedAgain": "ایجاد موضوع جدید",
   "new.toastSubmitted": "موضوع برای بررسی ارسال شد",
+  "new.toastLoginRequired": "لطفاً برای ایجاد موضوع وارد شوید.",
+  "new.errorTitleMin": "عنوان باید حداقل ۱۰ کاراکتر باشد.",
+  "new.errorContentMin": "جزئیات باید حداقل ۱۰ کاراکتر باشد.",
+  "new.errorInvalidData": "اطلاعات وارد شده معتبر نیست.",
+  "new.errorSessionExpired": "جلسه شما منقضی شده است. دوباره وارد شوید.",
+  "new.errorSubmitFailed": "خطا در ارسال موضوع",
 
   // admin
   "admin.title": "پنل مدیریت",
@@ -97,6 +107,47 @@ const fa: Dict = {
   "admin.noResults": "موردی یافت نشد",
   "admin.toastApproved": "موضوع تأیید شد",
   "admin.toastRejected": "موضوع رد شد",
+  "admin.reviewDialogTitle": "بررسی موضوع",
+  "admin.reviewOperationsBtn": "عملیات",
+  "admin.reviewBodyLabel": "متن کامل",
+  "admin.reviewApprovePublish": "تأیید و انتشار",
+  "admin.reviewRejectThread": "رد موضوع",
+  "admin.reviewClose": "بستن",
+  "admin.reviewViewPublic": "مشاهده در سایت",
+  "admin.reviewAttachments": "پیوست‌ها",
+  "admin.reviewLoadError": "بارگذاری جزئیات موضوع ناموفق بود.",
+  "admin.reviewAttachmentOther": "پیوست",
+
+  // admin — categories
+  "adminCategories.title": "دسته‌بندی‌ها",
+  "adminCategories.subtitle": "افزودن، تغییر نام یا غیرفعال کردن دسته‌ها",
+  "adminCategories.new": "دسته جدید",
+  "adminCategories.rename": "تغییر نام",
+  "adminCategories.activeShort": "فعال در سایت",
+  "adminCategories.threadCount": "{count} گفتگو",
+  "adminCategories.badgeActive": "فعال",
+  "adminCategories.badgeInactive": "غیرفعال",
+  "adminCategories.empty": "هنوز دسته‌ای وجود ندارد.",
+  "adminCategories.createTitle": "دسته جدید",
+  "adminCategories.editTitle": "تغییر نام دسته",
+  "adminCategories.fieldTitle": "عنوان",
+  "adminCategories.fieldTitlePh": "مثلاً کارت گرافیک",
+  "adminCategories.fieldDesc": "توضیح (اختیاری)",
+  "adminCategories.fieldDescPh": "خلاصه برای کاربران",
+  "adminCategories.fieldOrder": "ترتیب نمایش",
+  "adminCategories.activeInForm": "فعال باشد",
+  "adminCategories.activeHint": "در لیست عمومی و فرم‌ها نمایش داده شود",
+  "adminCategories.createBtn": "ایجاد",
+  "adminCategories.saveBtn": "ذخیره",
+  "adminCategories.cancel": "انصراف",
+  "adminCategories.close": "بستن",
+  "adminCategories.toastCreated": "دسته ایجاد شد",
+  "adminCategories.toastUpdated": "ذخیره شد",
+  "adminCategories.errorCreate": "ایجاد دسته ناموفق بود",
+  "adminCategories.errorUpdate": "به‌روزرسانی ناموفق بود",
+  "adminCategories.errorToggle": "تغییر وضعیت ناموفق بود",
+  "adminCategories.accessTitle": "دسترسی مدیر لازم است",
+  "adminCategories.accessDesc": "برای مدیریت دسته‌بندی‌ها باید با حساب مدیر وارد شوید.",
 
   // auth
   "auth.signIn": "ورود",
@@ -147,6 +198,9 @@ const fa: Dict = {
   "thread.postReply": "ارسال پاسخ",
   "thread.toastReplyPosted": "پاسخ ارسال شد",
   "thread.notFoundOrPending": "این گفتگو یافت نشد یا هنوز تأیید نشده است.",
+  "thread.interactionLoginRequired": "برای لایک و واکنش باید وارد شوید.",
+  "thread.addReaction": "افزودن واکنش",
+  "thread.replyInteractionError": "عملیات انجام نشد. دوباره تلاش کنید.",
 
   // admin access
   "admin.accessRequired": "دسترسی مدیریت لازم است. با `admin@threadly.com` (رمز: `threadly`) وارد شوید.",
@@ -158,6 +212,11 @@ const fa: Dict = {
 function format(template: string, vars?: Record<string, string | number>) {
   if (!vars) return template;
   return template.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+}
+
+/** For route `head` and other non-React contexts (current locale: fa). */
+export function tStatic(key: string, vars?: Record<string, string | number>) {
+  return format(fa[key] ?? key, vars);
 }
 
 type I18nValue = {
