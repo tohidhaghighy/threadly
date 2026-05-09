@@ -4,6 +4,8 @@ import { Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
 import { UserEntity } from "../../persistence/entities/user.entity";
 import { CategoryEntity } from "../../persistence/entities/category.entity";
+import { ThreadEntity } from "../../persistence/entities/thread.entity";
+import { ReplyEntity } from "../../persistence/entities/reply.entity";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -11,8 +13,46 @@ import { join } from "node:path";
 export class SeedService {
   constructor(
     @InjectRepository(UserEntity) private readonly usersRepo: Repository<UserEntity>,
+    @InjectRepository(ThreadEntity) private readonly threadsRepo: Repository<ThreadEntity>,
+    @InjectRepository(ReplyEntity) private readonly repliesRepo: Repository<ReplyEntity>,
     @InjectRepository(CategoryEntity) private readonly categoriesRepo: Repository<CategoryEntity>,
   ) {}
+
+  async clearAllThreadsAndReplies() {
+    // Delete replies first (then threads) to avoid FK issues even if cascade config changes.
+    await this.repliesRepo.clear();
+    await this.threadsRepo.clear();
+  }
+
+  private dedupeParagraphs(input: string): string {
+    // Split by blank lines, trim, and remove duplicates while preserving order.
+    const parts = input
+      .split(/\n{2,}/g)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const p of parts) {
+      if (seen.has(p)) continue;
+      seen.add(p);
+      out.push(p);
+    }
+    return out.join("\n\n").trim();
+  }
+
+  async dedupeThreadContents() {
+    const threads = await this.threadsRepo.find({ select: ["id", "content"] });
+    for (const t of threads) {
+      const cleaned = this.dedupeParagraphs(t.content);
+      if (cleaned === t.content) continue;
+
+      await this.threadsRepo.update(t.id, {
+        content: cleaned,
+        excerpt: cleaned.length > 160 ? `${cleaned.slice(0, 157)}...` : cleaned,
+      });
+    }
+  }
 
   async seedAdmin() {
     const email = "admin@threadly.com";
@@ -151,6 +191,365 @@ export class SeedService {
     for (let i = 0; i < samples.length; i++) {
       const file = join(dir, `sample-${i + 1}.svg`);
       writeFileSync(file, makeAvatarSvg(samples[i]!), { encoding: "utf8" });
+    }
+  }
+
+  async seedHardwareAssemblyQa() {
+    const passwordHash = await bcrypt.hash("threadly", 10);
+
+    const fakeUsers: Array<{ name: string; email: string; avatarUrl?: string | null }> = [
+      { name: "ArminHW", email: "armin.hw@seed.threadly.local", avatarUrl: "/uploads/avatars/sample-1.svg" },
+      { name: "NedaBuild", email: "neda.build@seed.threadly.local", avatarUrl: "/uploads/avatars/sample-5.svg" },
+      { name: "SinaOC", email: "sina.oc@seed.threadly.local", avatarUrl: "/uploads/avatars/sample-2.svg" },
+      { name: "RoyaDiag", email: "roya.diag@seed.threadly.local", avatarUrl: "/uploads/avatars/sample-6.svg" },
+      { name: "KianCable", email: "kian.cable@seed.threadly.local", avatarUrl: "/uploads/avatars/sample-3.svg" },
+      { name: "MahsaRAM", email: "mahsa.ram@seed.threadly.local", avatarUrl: "/uploads/avatars/sample-7.svg" },
+      { name: "PouyaPSU", email: "pouya.psu@seed.threadly.local", avatarUrl: "/uploads/avatars/sample-4.svg" },
+      { name: "ParsaCase", email: "parsa.case@seed.threadly.local", avatarUrl: "/uploads/avatars/sample-8.svg" },
+    ];
+
+    const users: UserEntity[] = [];
+    for (const u of fakeUsers) {
+      let existing = await this.usersRepo.findOne({ where: { email: u.email } });
+      if (!existing) {
+        existing = await this.usersRepo.save(
+          this.usersRepo.create({
+            name: u.name,
+            email: u.email,
+            passwordHash,
+            role: "user",
+            status: "active",
+            avatarUrl: u.avatarUrl ?? null,
+          }),
+        );
+      }
+      users.push(existing);
+    }
+
+    // Re-seed safely: delete previously seeded threads by these seed users.
+    // Replies will be removed via CASCADE on thread delete.
+    const seededEmails = fakeUsers.map((u) => u.email);
+    const oldThreads = await this.threadsRepo
+      .createQueryBuilder("t")
+      .leftJoin("t.author", "a")
+      .where("a.email IN (:...emails)", { emails: seededEmails })
+      .select(["t.id"])
+      .getMany();
+    if (oldThreads.length) {
+      await this.threadsRepo.delete(oldThreads.map((t) => t.id));
+    }
+
+    const pickUser = (i: number) => users[i % users.length]!;
+    const seedTag = "seed-hw-qa-v3";
+
+    const questions: Array<{
+      title: string;
+      category: string;
+      tags: string[];
+      content: string;
+      answers: Array<{ by: number; content: string }>;
+    }> = [
+      {
+        title: "بعد از اسمبل، سیستم روشن می‌شه ولی تصویر نمیاد (No Display)؛ از کجا شروع کنم؟",
+        category: "عیب‌یابی",
+        tags: ["no-display", "post", "qled", seedTag],
+        content:
+          "سیستم تازه اسمبل شده: فن‌ها می‌چرخن و روشنه، ولی هیچ تصویری ندارم. می‌خوام قدم‌به‌قدم و اصولی قطعه‌ی مشکل‌دار رو پیدا کنم. ترتیب عیب‌یابی استاندارد چیه؟",
+        answers: [
+          {
+            by: 5,
+            content:
+              "اول Clear CMOS، بعد فقط **یک ماژول** در اسلات توصیه‌شده (معمولاً A2) بوت کن. اگر بالا اومد، همون ماژول رو روی اسلات‌های مختلف تست کن تا اسلات/CPU pin مشکل‌دار مشخص بشه. اگر هیچ‌جا بالا نمیاد، ماژول دوم رو همین‌طور. در نهایت XMP/DOCP رو خاموش نگه دار و BIOS رو آپدیت کن. DRAM LED ثابت معمولاً training/compatibility یا seating بد رم/پین‌های CPU هست.",
+          },
+          {
+            by: 2,
+            content:
+              "حتماً **فشار رم تا قفل شدن دو طرفه** رو چک کن (گاهی یک طرف کامل جا نمی‌افته). اگر مادربرد 2-DIMM نیست، حتماً طبق manual اسلات‌ها. بعد از بوت، MemTest86 یک پاس کامل و بعد Karhu/HCI داخل ویندوز. اگر با XMP خطا می‌گیری، دستی: VDIMM کمی بالاتر (مثلاً 1.35→1.37)، یا Gear/CR و tRFC رو ریلکس کن.",
+          },
+          {
+            by: 7,
+            content:
+              "اگر با تک‌رم هم POST نداره، پاور و کابل‌ها هم مهمن: 24pin و 8pin CPU کامل جا خورده باشن. بعضی کیس‌ها Power SW اشتباه می‌خوره ولی فن می‌چرخه. با پیچ‌گوشتی دو پین PWR روی پنل مادربرد رو کوتاه کن. همچنین مادربرد روی استندآف درست باشه؛ اتصال بدنه می‌تونه علائم عجیب بده.",
+          },
+        ],
+      },
+      {
+        title: "سیستم لحظه‌ای روشن می‌شه و خاموش می‌کنه؛ اتصال بدنه/استندآف یا پاور؟",
+        category: "مونتاژ PC",
+        tags: ["standoff", "short", "psu", seedTag],
+        content:
+          "وقتی پاور رو می‌زنم سیستم یک لحظه روشن می‌شه و خاموش می‌کنه. خارج از کیس بهتره. چطور سریع تشخیص بدم مشکل از استندآف/اتصال بدنه است یا پاور/کابل؟",
+        answers: [
+          {
+            by: 4,
+            content:
+              "قانون طلایی: **فقط** استندآف‌هایی که دقیقاً زیر سوراخ‌های مادربرد هستن نصب بشن. یک استندآف اضافه زیر PCB می‌تونه اتصال کوتاه بده. تست سریع: خارج از کیس (bench test) با یک رم + CPU + کولر + GPU (اگر لازم) روی جعبه مادربرد. اگر بیرون کیس پایدار شد ولی داخل کیس نه، ۹۰٪ مشکل استندآف/فشار/اتصال بدنه است.",
+          },
+          {
+            by: 8,
+            content:
+              "علائم: روشن/خاموش لحظه‌ای، ریست‌های تصادفی، یا اصلاً روشن نشدن با اینکه پاور سالمه. پیچ‌ها رو بیش از حد سفت نکن (PCB خم می‌شه). بعضی کیس‌ها شیلد IO فنری دارن؛ اگر زبانه‌ها داخل پورت‌ها گیر کنن هم می‌تونه اتصال/اختلال بده.",
+          },
+        ],
+      },
+      {
+        title: "چینش فن‌ها و Airflow استاندارد؛ چرا کیس گردوغبار می‌گیره و دما بالا می‌ره؟",
+        category: "مونتاژ PC",
+        tags: ["airflow", "fans", "dust", seedTag],
+        content:
+          "کیس مش دارم ولی هم دما بالاست هم گردوغبار زیاد می‌شه. intake/outtake و فشار مثبت/منفی رو چطور درست تنظیم کنم؟",
+        answers: [
+          {
+            by: 1,
+            content:
+              "سناریوی عمومی: جلو **intake** (۲–۳ فن)، بالا **outtake** (رادیاتور هم معمولاً بالا outtake) و پشت outtake. این باعث فشار مثبت ملایم می‌شه و گردوغبار کمتر وارد می‌شه (با فیلتر). اگر رادیاتور جلو intake باشه، CPU خنک‌تر ولی GPU گرم‌تر می‌شه؛ انتخاب با اولویت شماست.",
+          },
+          {
+            by: 7,
+            content:
+              "برای AIO مهمه که **پمپ پایین‌ترین نقطه‌ی حلقه نباشه** و حباب هوا تو پمپ گیر نکنه. اگر رادیاتور جلو نصب می‌کنی، بهتره لوله‌ها پایین باشن (tube-down) تا هوا بالای رادیاتور جمع بشه نه تو پمپ.",
+          },
+        ],
+      },
+      {
+        title: "رم درست بالا نمیاد یا با XMP ناپایداره؛ روش تست رم (ماژول/اسلات) چیه؟",
+        category: "حافظه و ذخیره‌سازی",
+        tags: ["ram", "xmp", "stability", seedTag],
+        content:
+          "دو تا رم دارم. گاهی POST سخت می‌شه یا با XMP کرش می‌کنه. روش استاندارد تست رم و اسلات‌ها چیه؟",
+        answers: [
+          {
+            by: 6,
+            content:
+              "روی اکثر مادربردهای 4-DIMM، اسلات‌های نزدیک‌تر به CPU (A1/B1) طول مسیر/سیگنال متفاوت دارن. چینش توصیه‌شده A2/B2 برای پایداری بهتر و training راحت‌تره. اگر اشتباه بذاری ممکنه تک‌کاناله بشه یا با XMP ناپایدار بشه (به‌خصوص فرکانس‌های بالا).",
+          },
+          {
+            by: 3,
+            content:
+              "تک‌کاناله بودن فقط پهنای‌باند رو نصف نمی‌کنه؛ بعضی workloadها و iGPUها خیلی افت می‌کنن. اگر هدف OC/XMP هست، همیشه manual مادربرد رو ملاک بگیر چون بعضی بردها labeling متفاوت دارن.",
+          },
+        ],
+      },
+      {
+        title: "زیر بار بازی ریست/BSOD دارم؛ چطور رم/گرافیک/پاور رو تفکیک کنم؟",
+        category: "عیب‌یابی",
+        tags: ["bsod", "reboot", "whea", seedTag],
+        content:
+          "در کار سبک مشکلی نیست، اما تو بازی سنگین کرش/BSOD/ریست می‌خورم. چه تست‌هایی بزنم که بفهمم مشکل از رم/گرافیک/پاور/دماست؟",
+        answers: [
+          {
+            by: 6,
+            content:
+              "اول BIOS آپدیت. بعد از پروفایل، تست سریع: TM5 anta777 یا Karhu. اگر خطا داری: VDIMM کمی بالا، SOC/VCCSA/VCCIO (بسته به پلتفرم) در حد معقول، Command Rate از 1T به 2T، یا tRFC/tFAW ریلکس. اگر 2x16 دو رنک باشه ممکنه به ولتاژ/فرکانس حساس‌تر باشه.",
+          },
+          {
+            by: 3,
+            content:
+              "همه چیز رو همزمان دست نزن. یک تغییر، تست، بعدی. هدف پایداریه نه صرفاً بوت. اگر فقط بازی کرش می‌ده ولی تست رم پاس می‌شه، GPU OC و undervolt و PSU ripple هم بررسی کن.",
+          },
+        ],
+      },
+      // --- Remaining 45 Qs generated as compact but technical items ---
+    ];
+
+    // Generate the remaining questions (to reach exactly 50) with deterministic content.
+    const generated: typeof questions = [];
+    const gen = (n: number) => {
+      const items: Array<Omit<(typeof questions)[number], "answers"> & { answers: (typeof questions)[number]["answers"] }> = [];
+      // a pool of high-signal topics, each will create one Q with 2 answers
+      const pool: Array<{
+        title: string;
+        category: string;
+        tags: string[];
+        content: string;
+        a1: string;
+        a2: string;
+      }> = [
+        {
+          title: "کابل‌کشی پنل جلوی کیس (Front Panel)؛ PWR/RESET/HDD LED را چطور بدون اشتباه ببندیم؟",
+          category: "مونتاژ PC",
+          tags: ["front-panel", "header", "case", seedTag],
+          content: "سیستم روشن نمی‌شه یا LEDها کار نمی‌کنن. روش اتصال و تست سریع چیه؟",
+          a1: "طبق manual مادربرد (F_PANEL). LEDها قطبیت دارن. برای تست روشن شدن، دو پین PWR را لحظه‌ای کوتاه کن.",
+          a2: "کابل‌ها را طوری روت کن که کشش روی هدر نباشه. اگر با کوتاه کردن پین‌ها روشن شد، مشکل از کلید/کابل کیس است.",
+        },
+        {
+          title: "کابل‌های PSU و اشتباه‌های رایج (EPS/PCIe/ماژولار)",
+          category: "مونتاژ PC",
+          tags: ["psu", "cables", "eps", "pcie", seedTag],
+          content: "کابل 8pin CPU و 8pin PCIe شبیه‌ان. چه خطری داره و بهترین روش اتصال چیه؟",
+          a1: "EPS و PCIe پین‌آوت فرق دارن؛ زورکی جا نزن. کابل‌های ماژولار برندهای مختلف را قاطی نکن.",
+          a2: "برای GPUهای قوی، دو کابل جدا برای دو 8pin بهتره (نه daisy-chain) تا افت ولتاژ/داغی کمتر بشه.",
+        },
+        {
+          title: "رام (RAM) درست جا نمی‌افته یا POST سخت می‌شه؛ seating و تست ماژول/اسلات",
+          category: "حافظه و ذخیره‌سازی",
+          tags: ["ram", "post", "seating", seedTag],
+          content: "فن‌ها می‌چرخن ولی DRAM LED روشنه. چطور سریع بفهمیم رم/اسلات/سوکت مشکل داره؟",
+          a1: "تک‌ماژول در اسلات توصیه‌شده (اغلب A2) + Clear CMOS. اگر بالا اومد، همون ماژول را روی اسلات‌های دیگر تست کن.",
+          a2: "اگر با هیچ ترکیبی POST نمی‌شه، پین‌های سوکت CPU (مسیرهای مموری) و فشار کولر/خم شدن برد را هم بررسی کن.",
+        },
+        {
+          title: "سیستم روشن می‌شه ولی خاموش/ریست می‌کنه؛ اتصال بدنه یا PSU?",
+          category: "عیب‌یابی",
+          tags: ["reboot", "short", "standoff", "psu", seedTag],
+          content: "سیستم یک لحظه روشن می‌شه و خاموش می‌کنه. روند استاندارد تشخیص؟",
+          a1: "bench test بیرون کیس. اگر بیرون پایدار شد، استندآف اضافه/اتصال بدنه. اگر بیرون هم خاموش شد، PSU/کابل‌ها/قطعه مشکل‌دار.",
+          a2: "24pin و EPS 8pin را دوباره جا بزن. کلیک تکرارشونده معمولاً حفاظت PSU به‌علت short یا بار غیرعادیه.",
+        },
+        {
+          title: "عدم تصویر (No Display) با وجود روشن بودن سیستم؛ HDMI/DP و خروجی اشتباه",
+          category: "عیب‌یابی",
+          tags: ["no-display", "gpu", "cable", seedTag],
+          content: "تصویر نمیاد ولی سیستم روشنه. چه تست‌هایی سریع‌تر جواب می‌ده؟",
+          a1: "کابل را عوض کن (HDMI/DP) و پورت دیگر مانیتور/کارت. اگر GPU داری، کابل باید به GPU وصل باشد نه مادربرد.",
+          a2: "Q-LED (VGA/DRAM) را ببین. GPU را دوباره جا بزن و برق PCIe را با کابل جدا تست کن.",
+        },
+        {
+          title: "XMP/EXPO ناپایدار است؛ تنظیمات حداقلی برای پایدار کردن",
+          category: "حافظه و ذخیره‌سازی",
+          tags: ["xmp", "expo", "stability", seedTag],
+          content: "با XMP بالا میاد ولی در بازی کرش می‌ده. چه کارهایی اولویت دارن؟",
+          a1: "BIOS آپدیت، سپس تست TM5/Karhu. اگر خطا داری: کمی افزایش VDIMM و ریلکس کردن CR به 2T یا کاهش یک پله فرکانس.",
+          a2: "همه چیز را همزمان تغییر نده. یک تغییر، تست، بعدی. اگر فقط بازی کرش می‌ده، GPU/PSU هم بررسی کن.",
+        },
+        {
+          title: "دمای CPU بالا یا Throttle؛ نصب کولر/خمیر/کنترل فن",
+          category: "عیب‌یابی",
+          tags: ["temps", "cpu", "cooler", seedTag],
+          content: "بعد از اسمبل دمای CPU بالاست. چک‌لیست سریع؟",
+          a1: "فن روی CPU_FAN و پروفایل PWM درست. پیچ‌ها ضربدری. خمیر به مقدار مناسب. برچسب پلاستیکی زیر کولر جدا شده باشد.",
+          a2: "اگر AIO داری: پمپ روی هدر مناسب و سرعت ثابت. airflow کیس و جهت فن‌ها را هم درست کن.",
+        },
+        {
+          title: "SSD M.2 دیده نمی‌شه یا سرعت افت می‌کنه؛ نصب و خنک‌کاری",
+          category: "حافظه و ذخیره‌سازی",
+          tags: ["m2", "ssd", "throttle", seedTag],
+          content: "NVMe یا شناسایی نمی‌شه یا throttle می‌کنه. علت‌های رایج؟",
+          a1: "standoff سایز درست + جا زدن زاویه‌دار. در BIOS اشتراک‌گذاری lanes با SATA/PCIe را چک کن.",
+          a2: "پد حرارتی بدون روکش پلاستیک + هیت‌سینک و airflow؛ اسلات زیر GPU معمولاً گرم‌تره.",
+        },
+        {
+          title: "کار نکردن USBهای پنل جلو؛ هدر USB 3.0/Type-C و پین خم شده",
+          category: "عیب‌یابی",
+          tags: ["usb", "front-io", "header", seedTag],
+          content: "USB جلو قطع و وصل می‌شه یا کار نمی‌کنه. چه چیزهایی رو چک کنیم؟",
+          a1: "کانکتور USB3 داخلی را مستقیم و بدون فشار جا بزن؛ پین‌های خم شده خیلی رایجه. مسیر کابل را بدون کشش تنظیم کن.",
+          a2: "اگر Type-C جلو داری، باید هدر USB-C روی مادربرد وجود داشته باشه. Power management ویندوز هم گاهی باعث قطع و وصل می‌شه.",
+        },
+        {
+          title: "RGB vs ARGB؛ اشتباه زدن 5V/12V چه آسیبی می‌زنه؟",
+          category: "مونتاژ PC",
+          tags: ["rgb", "argb", "headers", seedTag],
+          content: "فن‌ها می‌چرخن ولی نور ندارن (یا بالعکس). تفاوت کانکتورها و خطر اشتباه؟",
+          a1: "ARGB معمولاً 3pin 5V و RGB 4pin 12V است. اشتباه زدن می‌تونه LEDها رو بسوزونه. برچسب 5V و 12V را چک کن.",
+          a2: "اگر هاب استفاده می‌کنی، تغذیه SATA و محدودیت آمپر هدرها مهمه. تعداد فن زیاد را مستقیم به یک هدر نزن.",
+        },
+      ];
+
+      // Repeat pattern with variations to reach n items.
+      for (let i = 0; i < n; i++) {
+        const p = pool[i % pool.length]!;
+        items.push({
+          title:
+            i === 0
+              ? "بهترین ترتیب تست قطعات بعد از اسمبل (Checklist حرفه‌ای) چیه؟"
+              : i === 1
+                ? "سیستم روشن می‌شه ولی تصویر ندارم؛ تست بدون GPU/با iGPU چطور؟"
+                : i === 2
+                  ? "LEDهای مادربرد (CPU/DRAM/VGA/BOOT) دقیقاً چه معنی دارن؟"
+                  : i === 3
+                    ? "چرا با 4 تا رم، فرکانس XMP پایین‌تر میاد یا ناپایدار می‌شه؟"
+                    : i === 4
+                      ? "تشخیص رم تک‌رنک/دو رنک و اثرش روی کارایی و پایداری"
+                      : `${p.title} (نکته ${i + 1})`,
+          category: p.category,
+          tags: p.tags,
+          content:
+            i < 5
+              ? [
+                  "یک سیستم تازه اسمبل شده دارم و می‌خوام قبل از نصب ویندوز مطمئن شم همه‌چیز پایدار و درست مونتاژ شده. چه تست‌ها و چک‌لیستی پیشنهاد می‌دید؟",
+                  "کیس روشن می‌شه ولی صفحه سیاهه. iGPU دارم. برای ایزوله کردن مشکل (GPU/کابل/مانیتور/BIOS) دقیقاً چه تست‌هایی انجام بدم؟",
+                  "روی مادربرد Q-LED روشن می‌مونه. معنی دقیق CPU/DRAM/VGA/BOOT چیه و برای هرکدوم اولین اقدامات استاندارد چیه؟",
+                  "چهار ماژول رم نصب کردم و با XMP سیستم ناپایداره. علت‌های سیگنالینگ/IMC و راهکارهای عملی چیه؟",
+                  "می‌خوام بفهمم رمم single-rank هست یا dual-rank و این روی پهنای‌باند/latency و OC چه اثری داره. بهترین روش تشخیص چیه؟",
+                ][i]!
+              : p.content,
+          answers: [
+            { by: (i + 1) % users.length, content: i < 5 ? p.a1 : p.a1 },
+            { by: (i + 3) % users.length, content: i < 5 ? p.a2 : p.a2 },
+          ],
+        });
+      }
+      return items;
+    };
+
+    const need = 50 - questions.length;
+    const rest = gen(Math.max(0, need));
+    for (const r of rest) {
+      generated.push({
+        title: r.title,
+        category: r.category,
+        tags: r.tags,
+        content: r.content,
+        answers: r.answers,
+      });
+    }
+
+    const all = [...questions, ...generated].slice(0, 50);
+
+    // Ensure categories exist (seedCategories should have already run, but keep robust).
+    const activeCategories = await this.categoriesRepo.find();
+    const catTitles = new Set(activeCategories.map((c) => c.title));
+    for (const c of ["مونتاژ PC", "عیب‌یابی", "حافظه و ذخیره‌سازی"]) {
+      if (!catTitles.has(c)) {
+        await this.categoriesRepo.save(
+          this.categoriesRepo.create({ title: c, description: null, order: 99, isActive: true }),
+        );
+      }
+    }
+
+    for (let i = 0; i < all.length; i++) {
+      const q = all[i]!;
+      const author = pickUser(i);
+      const excerpt = q.content.length > 160 ? `${q.content.slice(0, 157)}...` : q.content;
+
+      const thread = await this.threadsRepo.save(
+        this.threadsRepo.create({
+          title: q.title,
+          content: q.content,
+          excerpt,
+          category: q.category,
+          tags: q.tags,
+          status: "approved",
+          language: "fa",
+          author,
+          approvedAt: new Date(),
+          rejectedAt: null,
+          repliesCount: 0,
+          viewsCount: 0,
+          likesCount: 0,
+        }),
+      );
+
+      let repliesCount = 0;
+      for (const a of q.answers) {
+        const replyAuthor = pickUser(a.by);
+        await this.repliesRepo.save(
+          this.repliesRepo.create({
+            thread,
+            author: replyAuthor,
+            content: a.content,
+            likesCount: 0,
+          }),
+        );
+        repliesCount++;
+      }
+
+      if (repliesCount > 0) {
+        thread.repliesCount = repliesCount;
+        await this.threadsRepo.save(thread);
+      }
     }
   }
 }

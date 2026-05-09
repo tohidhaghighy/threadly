@@ -53,7 +53,7 @@ import { SeoController } from "./seo.controller";
         logging: false,
       }),
     }),
-    TypeOrmModule.forFeature([UserEntity, ThreadEntity, CategoryEntity]),
+    TypeOrmModule.forFeature([UserEntity, ThreadEntity, ReplyEntity, CategoryEntity]),
     AuthModule,
     UsersModule,
     ThreadsModule,
@@ -70,6 +70,8 @@ export class AppModule {
   async onModuleInit() {
     await this.seed.seedAdmin();
     await this.seed.seedCategories();
+    await this.seed.seedHardwareAssemblyQa();
+    await this.seed.dedupeThreadContents();
     this.seed.seedAvatarSamples();
   }
 }

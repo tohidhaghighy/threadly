@@ -2,6 +2,8 @@
 
 Threadly is a modern community forum for PC builders (Persian-first UI) where users can post threads, reply with text/images, react, and earn points.
 
+Powered by [tohidhaghighy/threadly](https://github.com/tohidhaghighy/threadly).
+
 ## Features
 
 - **Threads**

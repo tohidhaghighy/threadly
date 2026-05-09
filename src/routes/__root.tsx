@@ -109,6 +109,17 @@ function RootComponent() {
                 <main className="flex-1">
                   <Outlet />
                 </main>
+                <footer className="border-t border-border/60 bg-background/60 px-4 py-4 text-center text-xs text-muted-foreground md:px-6">
+                  Powered by{" "}
+                  <a
+                    href="https://github.com/tohidhaghighy/threadly"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-foreground hover:underline"
+                  >
+                    Threadly
+                  </a>
+                </footer>
               </div>
             </div>
             <Toaster />

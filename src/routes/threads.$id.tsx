@@ -228,7 +228,6 @@ function ThreadPage() {
         </div>
 
         <div className="space-y-4 p-6 text-base leading-relaxed text-foreground/90">
-          <p>{headerModel?.excerpt}</p>
           {headerModel?.content ? <p className="whitespace-pre-wrap">{headerModel.content}</p> : null}
 
           {headerModel?.attachments && headerModel.attachments.length > 0 ? (
