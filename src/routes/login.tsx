@@ -21,7 +21,7 @@ export const Route = createFileRoute("/login")({
   head: () => {
     const seo = buildSeo({
       title: "ورود",
-      description: "ورود به حساب کاربری در Threadly.",
+      description: "ورود به حساب کاربری در انجمن فاطر.",
       path: "/login",
       noindex: true,
     });
@@ -62,8 +62,8 @@ function LoginPage() {
       <div className="absolute inset-0 bg-gradient-primary opacity-10" />
       <div className="relative w-full max-w-md">
         <div className="mb-6 text-center">
-          <Link to="/" className="text-2xl font-extrabold">
-            Threadly
+          <Link to="/" className="inline-block text-sm font-extrabold leading-snug md:text-base">
+            {t("site.brand")}
           </Link>
           <p className="mt-2 text-sm text-muted-foreground">{t("auth.signInSubtitle")}</p>
         </div>

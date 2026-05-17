@@ -3,6 +3,12 @@ import { createContext, useContext, useEffect, useMemo, type ReactNode } from "r
 type Dict = Record<string, string>;
 
 const fa: Dict = {
+  // site / brand (فاطر)
+  "site.brand": "انجمن فاطر قدرت گرفته از Threadly",
+  "site.headerbrand": "انجمن فاطر",
+  "site.forumBanner": "انجمن گفتگو فاطر",
+  "site.tagline": "",
+
   // header / nav
   "nav.home": "خانه",
   "nav.threads": "گفتگوها",
@@ -13,7 +19,7 @@ const fa: Dict = {
   "nav.settings": "تنظیمات",
   "nav.categories": "دسته‌بندی‌ها",
   "nav.navigation": "پیمایش",
-  "header.searchPlaceholder": "جستجو در گفتگوها، تگ‌ها و کاربران...",
+  "header.searchPlaceholder": "جستجو در انجمن فاطر، تگ‌ها و کاربران...",
   "header.toggleTheme": "تغییر تم",
   "header.guestUser": "کاربر مهمان",
   "header.member": "عضو",
@@ -32,9 +38,11 @@ const fa: Dict = {
   "common.back": "بازگشت",
 
   // home
-  "home.badge": "انجمن رسمی Threadly",
-  "home.title": "هر آنچه برای ساختن کیس رویایی نیاز دارید",
-  "home.subtitle": "از مونتاژ کیس تا عیب‌یابی. به جامعه‌ای از بیلدرها بپیوندید و سوال بپرسید.",
+  "home.badge": "انجمن فاطر",
+  "home.title": "هر آنچه برای ساختن کیس رویایی نیاز دارید — در انجمن فاطر",
+  "home.subtitle":
+    "از مونتاژ کیس تا عیب‌یابی؛ در انجمن گفتگوی وب‌سایت فاطر با بیلدرها همراه شوید و سوال بپرسید.",
+  "home.searchPlaceholder": "جستجو در همه گفتگوهای فاطر...",
   "home.ask": "شروع گفتگو",
   "home.browse": "مرور موضوعات",
   "home.categories": "دسته‌بندی‌ها",
@@ -47,8 +55,8 @@ const fa: Dict = {
   "home.responseUnit": "پاسخ‌گویی",
 
   // threads list
-  "threads.title": "همه گفتگوها",
-  "threads.subtitle": "{threads} موضوع فعال در {categories} دسته",
+  "threads.title": "همه گفتگوهای فاطر",
+  "threads.subtitle": "{threads} موضوع فعال در {categories} دسته در انجمن فاطر",
   "threads.emptyTitle": "هنوز موضوعی نیست",
   "threads.emptyDesc": "اولین نفری باشید که گفتگو را شروع می‌کند.",
   "threads.emptyCta": "ایجاد موضوع",
@@ -64,9 +72,9 @@ const fa: Dict = {
   "new.field.title": "عنوان موضوع",
   "new.field.titlePlaceholder": "مثال: کیس بعد از نصب کارت RTX 4080 روشن نمی‌شود",
   "new.field.titleHint": "عنوانی واضح انتخاب کنید (حداقل ۱۰ کاراکتر)",
-  "new.metaTitle": "ایجاد موضوع — Threadly",
+  "new.metaTitle": "ایجاد موضوع — انجمن فاطر",
   "new.metaDescription":
-    "ایجاد سؤال جدید در Threadly. موضوعات جدید پس از تأیید مدیر منتشر می‌شوند.",
+    "ایجاد سؤال جدید در انجمن فاطر. موضوعات جدید پس از تأیید مدیر منتشر می‌شوند.",
   "new.field.category": "دسته‌بندی",
   "new.field.categoryPlaceholder": "یک دسته انتخاب کنید",
   "new.field.tags": "برچسب‌ها",
@@ -155,7 +163,7 @@ const fa: Dict = {
   "auth.signInSubtitle": "ورود به حساب کاربری",
   "auth.signUpSubtitle": "ساخت حساب جدید",
   "auth.enterEmailPassword": "ایمیل و رمز عبور خود را وارد کنید.",
-  "auth.signupHint": "برای پرسیدن سؤال و ارسال پاسخ ثبت‌نام کنید.",
+  "auth.signupHint": "برای پرسیدن سؤال و ارسال پاسخ در انجمن فاطر ثبت‌نام کنید.",
   "auth.email": "ایمیل",
   "auth.password": "رمز عبور",
   "auth.confirmPassword": "تکرار رمز عبور",
@@ -203,7 +211,8 @@ const fa: Dict = {
   "thread.replyInteractionError": "عملیات انجام نشد. دوباره تلاش کنید.",
 
   // admin access
-  "admin.accessRequired": "دسترسی مدیریت لازم است. با `admin@threadly.com` (رمز: `threadly`) وارد شوید.",
+  "admin.accessRequired":
+    "دسترسی مدیریت انجمن فاطر لازم است. با `admin@threadly.com` (رمز: `threadly`) وارد شوید.",
 
   // header
   "header.signIn": "ورود",

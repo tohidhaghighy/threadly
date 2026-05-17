@@ -32,7 +32,7 @@ export const Route = createFileRoute("/change-password")({
   head: () => {
     const seo = buildSeo({
       title: "تغییر رمز عبور",
-      description: "تغییر رمز عبور حساب کاربری در Threadly.",
+      description: "تغییر رمز عبور حساب کاربری در انجمن فاطر.",
       path: "/change-password",
       noindex: true,
     });

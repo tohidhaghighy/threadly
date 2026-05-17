@@ -31,7 +31,7 @@ export const Route = createFileRoute("/admin")({
   head: () => {
     const seo = buildSeo({
       title: "مدیریت",
-      description: "بررسی و مدیریت موضوعات و کاربران در Threadly.",
+      description: "بررسی و مدیریت موضوعات و کاربران در انجمن فاطر.",
       path: "/admin",
       noindex: true,
     });

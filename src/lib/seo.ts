@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const SITE_NAME = "Threadly";
+const SITE_NAME = "انجمن فاطر";
 const DEFAULT_OG_IMAGE = "/og-default.svg";
 
 function getEnvSiteUrl(): string | null {
@@ -21,7 +21,7 @@ function getBaseUrl(): string {
 }
 
 export type SeoInput = {
-  /** Page title (will be appended with site name). Pass full title via `titleAbsolute` if you don't want " — Threadly". */
+  /** Page title (will be appended with site name). Pass full title via `titleAbsolute` if you don't want " — انجمن فاطر". */
   title?: string;
   titleAbsolute?: string;
   description?: string;
