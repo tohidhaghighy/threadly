@@ -1,15 +1,34 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Award, ArrowRight, MessageCircle, Sparkles, PlusCircle } from "lucide-react";
+import {
+  Award,
+  ArrowRight,
+  MessageCircle,
+  Sparkles,
+  PlusCircle,
+  Flame,
+  ShieldCheck,
+  Rocket,
+  FileText,
+  HandHelping,
+  Zap,
+  Star,
+  Gem,
+  Layers,
+  Lock,
+  CheckCircle2,
+} from "lucide-react";
 import { api, type UserPointsEvent, type UserProfile } from "@/lib/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { Link } from "@tanstack/react-router";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/lib/auth";
 import { buildSeo, useSeo } from "@/lib/seo";
+import { achievementsFromProfile, activityStreakFromEvents, levelFromPoints } from "@/lib/gamification";
 
 export const Route = createFileRoute("/users/$id")({
   head: ({ params }) => {
@@ -41,6 +60,10 @@ function UserProfilePage() {
   const u = q.data;
   const events = eventsQ.data?.items ?? [];
   const isMyProfile = !!auth.user && auth.user.id === id;
+  const level = u ? levelFromPoints(u.points) : null;
+  const streakDays = activityStreakFromEvents(events);
+  const achievements = u ? achievementsFromProfile(u) : [];
+  const unlockedAchievements = achievements.filter((a) => a.unlocked).length;
 
   useSeo(
     u
@@ -115,6 +138,17 @@ function UserProfilePage() {
                   رتبه {u.rank.toLocaleString("fa-IR")} از {u.totalUsers.toLocaleString("fa-IR")} • امتیاز{" "}
                   <span className="font-extrabold text-primary">{u.points.toLocaleString("fa-IR")}</span>
                 </p>
+                {level ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge className="border border-primary/30 bg-primary/15 text-primary">
+                      سطح {level.level} · {level.title}
+                    </Badge>
+                    <Badge variant="outline" className="gap-1">
+                      <Flame className="h-3.5 w-3.5 text-orange-500" />
+                      {streakDays.toLocaleString("fa-IR")} روز فعالیت پیاپی
+                    </Badge>
+                  </div>
+                ) : null}
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2">
                 <span className="text-xs font-semibold text-muted-foreground">امتیاز</span>
@@ -142,11 +176,30 @@ function UserProfilePage() {
               <Skeleton className="h-20 w-full" />
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-3">
-              <StatCard label="موضوع‌ها" value={u.breakdown.threads} />
-              <StatCard label="کامنت‌ها" value={u.breakdown.comments} />
-              <StatCard label="واکنش‌ها" value={u.breakdown.reactions} icon={<Award className="h-4 w-4" />} />
-            </div>
+            <>
+              {level ? (
+                <div className="rounded-xl border border-border/60 bg-card p-4 shadow-card">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-extrabold">پیشرفت سطح</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {level.nextLevel
+                          ? `${level.pointsToNext.toLocaleString("fa-IR")} امتیاز تا سطح ${level.nextLevel}`
+                          : "بالاترین سطح را کسب کرده‌اید"}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">Lv {level.level}</Badge>
+                  </div>
+                  <Progress value={level.progressPercent} className="mt-3 h-2.5" />
+                </div>
+              ) : null}
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <StatCard label="موضوع‌ها" value={u.breakdown.threads} />
+                <StatCard label="کامنت‌ها" value={u.breakdown.comments} />
+                <StatCard label="واکنش‌ها" value={u.breakdown.reactions} icon={<Award className="h-4 w-4" />} />
+              </div>
+            </>
           )}
 
           <div className="mt-6 rounded-xl border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
@@ -170,6 +223,57 @@ function UserProfilePage() {
               <EarnCard title="ثبت واکنش" points="+۱" desc="هر واکنش روی کامنت‌های موضوعات تأیید شده ۱ امتیاز دارد." />
             </div>
           </div>
+
+          {q.isLoading || !u ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-border/60 bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-extrabold">نشان‌های افتخار</p>
+                    <p className="text-xs text-muted-foreground">پاداش فعالیت مستمر و موثر در انجمن</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {unlockedAchievements.toLocaleString("fa-IR")} / {achievements.length.toLocaleString("fa-IR")}
+                </Badge>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {achievements.map((a) => (
+                  <div
+                    key={a.id}
+                    className={`rounded-xl border p-3 ${
+                      a.unlocked
+                        ? "border-emerald-500/30 bg-emerald-500/10"
+                        : "border-border/60 bg-muted/20 text-muted-foreground"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-background/70">
+                        <AchievementIcon id={a.id} />
+                      </div>
+                      {a.unlocked ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <Lock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm font-extrabold">{a.title}</p>
+                    <p className="mt-1 text-xs">{a.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-6 overflow-hidden rounded-xl border border-border/60 bg-card shadow-card">
             <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-muted/20 p-4">
@@ -295,5 +399,16 @@ function EarnCard({ title, points, desc }: { title: string; points: string; desc
       <p className="mt-2 text-xs text-muted-foreground">{desc}</p>
     </div>
   );
+}
+
+function AchievementIcon({ id }: { id: string }) {
+  if (id === "first-thread") return <Rocket className="h-4 w-4" />;
+  if (id === "topic-master") return <FileText className="h-4 w-4" />;
+  if (id === "helpful") return <HandHelping className="h-4 w-4" />;
+  if (id === "reactor") return <Zap className="h-4 w-4" />;
+  if (id === "century") return <Star className="h-4 w-4" />;
+  if (id === "elite") return <Gem className="h-4 w-4" />;
+  if (id === "all-rounder") return <Layers className="h-4 w-4" />;
+  return <Award className="h-4 w-4" />;
 }
 

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Crown, Trophy } from "lucide-react";
 import { api, type UserLeaderboardItem } from "@/lib/api";
+import { levelFromPoints } from "@/lib/gamification";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,6 +67,7 @@ function UsersLeaderboardPage() {
             <TableRow className="bg-muted/40 hover:bg-muted/40">
               <TableHead className="text-start">رتبه</TableHead>
               <TableHead className="text-start">کاربر</TableHead>
+              <TableHead className="text-start">سطح</TableHead>
               <TableHead className="text-start">امتیاز</TableHead>
               <TableHead className="text-start">جزئیات</TableHead>
             </TableRow>
@@ -76,11 +78,14 @@ function UsersLeaderboardPage() {
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-4 w-8" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-40" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-56" /></TableCell>
                   </TableRow>
                 ))
-              : items.map((u) => (
+              : items.map((u) => {
+                  const level = levelFromPoints(u.points);
+                  return (
                   <TableRow key={u.id} className="hover:bg-muted/30">
                     <TableCell><RankCell rank={u.rank} /></TableCell>
                     <TableCell>
@@ -93,6 +98,11 @@ function UsersLeaderboardPage() {
                         <span className="font-semibold">{u.name}</span>
                       </Link>
                     </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        Lv {level.level} · {level.title}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="font-extrabold text-primary">{u.points.toLocaleString("fa-IR")}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -102,7 +112,8 @@ function UsersLeaderboardPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
           </TableBody>
         </Table>
         {!q.isLoading && items.length === 0 ? (
