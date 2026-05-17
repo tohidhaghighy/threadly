@@ -52,6 +52,9 @@ export class ThreadEntity {
   @Column({ type: "int", default: 0 })
   likesCount!: number;
 
+  @Column({ type: "varchar", length: 36, nullable: true })
+  bestReplyId!: string | null;
+
   @ManyToOne(() => UserEntity, (u) => u.threads, { eager: true })
   author!: UserEntity;
 

@@ -10,7 +10,9 @@ Powered by [tohidhaghighy/threadly](https://github.com/tohidhaghighy/threadly).
   - Create threads with category + tags
   - Attach images to a thread
   - View counts + likes
+  - Thread owner (and admin) can choose a **best answer**
   - Share link (native share / clipboard fallback)
+  - Lazy/debounced live search on home page with inline results
 - **Replies (comments)**
   - Post replies (with optional images)
   - Daily reply limit for regular users (admins unlimited)
@@ -18,12 +20,17 @@ Powered by [tohidhaghighy/threadly](https://github.com/tohidhaghighy/threadly).
 - **Users**
   - Leaderboard
   - User profile page showing points and activity history
+  - Gamification: levels, progress bar, streak, and achievements
   - Avatar upload or choose from built-in samples
+- **Notifications**
+  - Header alerts for replies, mentions, and thread activity
+  - Unread badge with per-user seen state
 - **Admin panel**
   - Review/approve/reject threads
   - Manage categories
   - Manage users (role + ban)
   - Manage comments
+  - Admin can do user actions (for example: best-answer moderation)
 - **SEO**
   - Canonical + OpenGraph/Twitter tags
   - `robots.txt` + `sitemap.xml`

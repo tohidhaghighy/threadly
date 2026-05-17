@@ -24,6 +24,10 @@ export class RepliesService {
   ) {}
 
   async list(threadId: string, viewerUserId?: string) {
+    const thread = await this.threadsRepo.findOne({ where: { id: threadId } });
+    if (!thread || thread.status !== "approved") throw new NotFoundException("Thread not found");
+    const bestReplyId = thread.bestReplyId ?? null;
+
     const items = await this.repliesRepo.find({
       where: { thread: { id: threadId } },
       order: { createdAt: "ASC" },
@@ -52,6 +56,7 @@ export class RepliesService {
         author: { id: r.author.id, displayName: r.author.name, avatarUrl: r.author.avatarUrl },
         content: r.content,
         createdAt: r.createdAt,
+        isBest: bestReplyId === r.id,
         likesCount: r.likesCount,
         likedByMe: viewerUserId ? likedByViewer.has(r.id) : false,
         reactions: reactionSummaries.get(r.id) ?? [],

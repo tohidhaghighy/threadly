@@ -113,6 +113,7 @@ export type ThreadDetail = {
   author: { id: string; displayName: string; avatarUrl: string | null };
   status: "pending" | "approved" | "rejected";
   counts: { repliesCount: number; viewsCount: number; likesCount: number };
+  bestReplyId: string | null;
   likedByMe: boolean;
   createdAt: string;
   updatedAt: string;
@@ -133,6 +134,7 @@ export type ReplyListItem = {
   author: { id: string; displayName: string; avatarUrl: string | null };
   content: string;
   createdAt: string;
+  isBest: boolean;
   likesCount: number;
   likedByMe: boolean;
   reactions: ReplyReactionSummary[];

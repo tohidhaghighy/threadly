@@ -110,6 +110,15 @@ export class ThreadsController {
     return this.threads.recordView(id, user?.userId);
   }
 
+  @Post(":id/best-reply/:replyId")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, schema: { example: { bestReplyId: "uuid-or-null" } } })
+  setBestReply(@Param("id") id: string, @Param("replyId") replyId: string, @Req() req: Request) {
+    const user = req.user as { userId: string };
+    return this.threads.setBestReply(id, replyId, user.userId);
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

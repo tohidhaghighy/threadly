@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Coins, Heart, MessageCircle, Share2, Flag, ArrowRight, Image as ImageIcon, Code2, Send } from "lucide-react";
+import { Coins, Heart, MessageCircle, Share2, Flag, ArrowRight, Image as ImageIcon, Code2, Send, CheckCircle2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +76,7 @@ function ThreadPage() {
 
   const thread = threadQuery.data;
   const replies = repliesQuery.data?.items ?? [];
+  const canPickBestAnswer = !!auth.user && !!thread && (auth.user.id === thread.author.id || auth.isAdmin);
 
   const firstImageAttachment = thread?.attachments?.find((a) => a.mimeType.startsWith("image/"))?.url;
   useSeo(
@@ -362,6 +363,12 @@ function ThreadPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-semibold">{r.author.displayName}</span>
+                    {r.isBest ? (
+                      <Badge className="gap-1 border border-emerald-500/30 bg-emerald-500/10 text-emerald-600">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        پاسخ برتر
+                      </Badge>
+                    ) : null}
                     <span className="text-xs text-muted-foreground">
                       • {formatDistanceToNow(new Date(r.createdAt), { addSuffix: true })}
                     </span>
@@ -389,6 +396,33 @@ function ThreadPage() {
                     </div>
                   ) : null}
                   <ReplyActions reply={r} threadId={id} />
+                  {canPickBestAnswer ? (
+                    <div className="mt-2">
+                      <Button
+                        variant={r.isBest ? "outline" : "secondary"}
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const res = await api<{ bestReplyId: string | null }>(`/api/threads/${id}/best-reply/${r.id}`, {
+                              method: "POST",
+                              auth: true,
+                            });
+                            if (res.bestReplyId) toast.success("پاسخ برتر انتخاب شد.");
+                            else toast.success("پاسخ برتر حذف شد.");
+                            await qc.invalidateQueries({ queryKey: ["replies", id] });
+                            await qc.invalidateQueries({ queryKey: ["thread", id] });
+                            await qc.invalidateQueries({ queryKey: ["threads"] });
+                          } catch (err) {
+                            const e = err as ApiError;
+                            toast.error(e?.message ?? "امکان انتخاب پاسخ برتر نیست.");
+                          }
+                        }}
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {r.isBest ? "حذف پاسخ برتر" : "انتخاب به عنوان پاسخ برتر"}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>

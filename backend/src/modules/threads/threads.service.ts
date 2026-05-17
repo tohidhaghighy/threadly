@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { ThreadEntity, type ThreadStatus } from "../../persistence/entities/thread.entity";
 import { UsersService } from "../users/users.service";
 import { ThreadLikeEntity } from "../../persistence/entities/thread-like.entity";
 import { ThreadViewEntity } from "../../persistence/entities/thread-view.entity";
+import { ReplyEntity } from "../../persistence/entities/reply.entity";
 
 function makeExcerpt(content: string) {
   const trimmed = content.trim();
@@ -16,6 +17,7 @@ export class ThreadsService {
   constructor(
     private readonly dataSource: DataSource,
     @InjectRepository(ThreadEntity) private readonly threadsRepo: Repository<ThreadEntity>,
+    @InjectRepository(ReplyEntity) private readonly repliesRepo: Repository<ReplyEntity>,
     @InjectRepository(ThreadLikeEntity) private readonly likesRepo: Repository<ThreadLikeEntity>,
     @InjectRepository(ThreadViewEntity) private readonly viewsRepo: Repository<ThreadViewEntity>,
     private readonly users: UsersService,
@@ -151,6 +153,7 @@ export class ThreadsService {
       author: { id: t.author.id, displayName: t.author.name, avatarUrl: t.author.avatarUrl },
       status: t.status,
       counts: { repliesCount: t.repliesCount, viewsCount: t.viewsCount, likesCount: t.likesCount },
+      bestReplyId: t.bestReplyId ?? null,
       likedByMe: extras?.likedByMe ?? false,
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
@@ -189,6 +192,25 @@ export class ThreadsService {
       await threadRepo.save(thread);
       return { likesCount: thread.likesCount, likedByMe: true };
     });
+  }
+
+  async setBestReply(threadId: string, replyId: string, actorUserId: string) {
+    const thread = await this.threadsRepo.findOne({ where: { id: threadId } });
+    if (!thread || thread.status !== "approved") throw new NotFoundException("Thread not found");
+
+    const actor = await this.users.findById(actorUserId);
+    const canModerateAsAdmin = actor.role === "admin";
+    if (thread.author.id !== actorUserId && !canModerateAsAdmin) {
+      throw new ForbiddenException("Only the thread owner or admin can choose the best answer");
+    }
+
+    const reply = await this.repliesRepo.findOne({ where: { id: replyId, thread: { id: threadId } } });
+    if (!reply) throw new NotFoundException("Reply not found");
+
+    // Selecting the same reply again unsets the best answer.
+    thread.bestReplyId = thread.bestReplyId === replyId ? null : reply.id;
+    await this.threadsRepo.save(thread);
+    return { bestReplyId: thread.bestReplyId };
   }
 
   async recordView(threadId: string, viewerUserId?: string) {
