@@ -87,6 +87,40 @@ export class UsersController {
     return this.users.pointsEvents(id, { limit });
   }
 
+  @Get("me/alerts")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        items: [
+          {
+            id: "mention:uuid",
+            type: "mention",
+            createdAt: "2026-01-01T12:00:00.000Z",
+            message: "Ali از شما منشن کرد.",
+            thread: { id: "uuid", title: "Hello" },
+            reply: { id: "uuid", excerpt: "@user ..." },
+            actor: { id: "uuid", name: "Ali", avatarUrl: null },
+          },
+          {
+            id: "thread-activity:uuid",
+            type: "thread_activity",
+            createdAt: "2026-01-01T11:00:00.000Z",
+            message: "موضوع شما ۲ پاسخ و ۱ لایک دارد.",
+            thread: { id: "uuid", title: "My Thread" },
+          },
+        ],
+        nextCursor: null,
+      },
+    },
+  })
+  myAlerts(@Req() req: Request, @Query("limit") limit?: string) {
+    const user = req.user as { userId: string };
+    return this.users.alertsForUser(user.userId, { limit });
+  }
+
   @Post("me/avatar-sample")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

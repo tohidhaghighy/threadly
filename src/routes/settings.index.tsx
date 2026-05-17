@@ -14,7 +14,7 @@ export const Route = createFileRoute("/settings/")({
   head: () => {
     const seo = buildSeo({
       title: "تنظیمات پروفایل",
-      description: "ویرایش پروفایل کاربری در Threadly.",
+      description: "ویرایش پروفایل کاربری در انجمن فاطر.",
       path: "/settings",
       noindex: true,
     });

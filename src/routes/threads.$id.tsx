@@ -19,7 +19,7 @@ export const Route = createFileRoute("/threads/$id")({
   head: ({ params }) => {
     const seo = buildSeo({
       title: "گفتگو",
-      description: "مشاهده و ارسال پاسخ برای گفتگوهای Threadly.",
+      description: "مشاهده و ارسال پاسخ برای گفتگوهای انجمن فاطر.",
       path: `/threads/${params.id}`,
       type: "article",
     });

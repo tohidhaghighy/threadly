@@ -139,6 +139,24 @@ export type ReplyListItem = {
   attachments: { id: string; url: string; mimeType: string; sizeBytes: number }[];
 };
 
+export type UserAlertItem =
+  | {
+      id: string;
+      type: "reply" | "mention";
+      createdAt: string;
+      message: string;
+      thread: { id: string; title: string };
+      reply: { id: string; excerpt: string };
+      actor: { id: string; name: string; avatarUrl: string | null };
+    }
+  | {
+      id: string;
+      type: "thread_activity";
+      createdAt: string;
+      message: string;
+      thread: { id: string; title: string };
+    };
+
 export type CategoryPublicItem = {
   id: string;
   title: string;

@@ -4,10 +4,38 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { Toaster } from "@/components/ui/sonner";
-import { I18nProvider } from "@/lib/i18n";
+import { I18nProvider, useI18n } from "@/lib/i18n";
 import { AppQueryProvider } from "@/lib/query";
 import { AuthProvider } from "@/lib/auth";
 import { buildSeo } from "@/lib/seo";
+import { ForumTopBanner } from "@/components/ForumTopBanner";
+
+function SiteFooter() {
+  const { t } = useI18n();
+  const line = t("site.brand");
+  const marker = "Threadly";
+  const i = line.lastIndexOf(marker);
+  return (
+    <footer className="border-t border-border/60 bg-background/60 px-4 py-4 text-center text-xs text-muted-foreground md:px-6">
+      {i === -1 ? (
+        line
+      ) : (
+        <>
+          {line.slice(0, i)}
+          <a
+            href="https://github.com/tohidhaghighy/threadly"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-foreground hover:underline"
+          >
+            {marker}
+          </a>
+          {line.slice(i + marker.length)}
+        </>
+      )}
+    </footer>
+  );
+}
 
 function NotFoundComponent() {
   return (
@@ -30,12 +58,12 @@ function NotFoundComponent() {
 }
 
 const ROOT_DESCRIPTION =
-  "Threadly is a community forum for PC builders: ask questions, share builds, and get expert answers.";
+  "انجمن گفتگوی فاطر برای سازندگان PC: پرسش، اشتراک اسمبل و پاسخ از جامعهٔ کاربران فاطر.";
 
 export const Route = createRootRoute({
   head: () => {
     const seo = buildSeo({
-      titleAbsolute: "Threadly — Build, Ask, Answer",
+      titleAbsolute: "انجمن فاطر — گفتگو",
       description: ROOT_DESCRIPTION,
       path: "/",
       type: "website",
@@ -47,7 +75,7 @@ export const Route = createRootRoute({
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         { name: "theme-color", content: "#f97316" },
         { name: "color-scheme", content: "dark light" },
-        { name: "application-name", content: "Threadly" },
+        { name: "application-name", content: "انجمن فاطر" },
         { name: "google", content: "notranslate" },
         ...seo.meta,
       ],
@@ -88,6 +116,7 @@ function RootComponent() {
         <AuthProvider>
           <I18nProvider>
             <div className="relative z-10 min-h-screen">
+              <ForumTopBanner />
               <Outlet />
               <Toaster />
             </div>
@@ -105,21 +134,14 @@ function RootComponent() {
             <div className="flex min-h-screen w-full">
               <AppSidebar />
               <div className="relative z-10 flex min-w-0 flex-1 flex-col">
-                <AppHeader />
+                <div className="sticky top-0 z-40 border-b border-border/60 bg-background/90 shadow-sm backdrop-blur-xl">
+                  <ForumTopBanner />
+                  <AppHeader />
+                </div>
                 <main className="flex-1">
                   <Outlet />
                 </main>
-                <footer className="border-t border-border/60 bg-background/60 px-4 py-4 text-center text-xs text-muted-foreground md:px-6">
-                  Powered by{" "}
-                  <a
-                    href="https://github.com/tohidhaghighy/threadly"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-semibold text-foreground hover:underline"
-                  >
-                    Threadly
-                  </a>
-                </footer>
+                <SiteFooter />
               </div>
             </div>
             <Toaster />

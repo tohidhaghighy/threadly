@@ -69,7 +69,7 @@ function UserProfilePage() {
     u
       ? {
           title: `${u.name} — پروفایل کاربر`,
-          description: `پروفایل ${u.name} در Threadly • امتیاز ${u.points} • رتبه ${u.rank} از ${u.totalUsers} • ${u.breakdown.threads} موضوع، ${u.breakdown.comments} کامنت، ${u.breakdown.reactions} واکنش.`,
+          description: `پروفایل ${u.name} در انجمن فاطر • امتیاز ${u.points} • رتبه ${u.rank} از ${u.totalUsers} • ${u.breakdown.threads} موضوع، ${u.breakdown.comments} کامنت، ${u.breakdown.reactions} واکنش.`,
           path: `/users/${id}`,
           type: "profile",
           image: u.avatarUrl ?? undefined,

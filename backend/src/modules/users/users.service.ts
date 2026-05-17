@@ -249,6 +249,108 @@ export class UsersService {
     return { items: items.slice(0, limit), nextCursor: null };
   }
 
+  async alertsForUser(userId: string, input?: { limit?: string }) {
+    const user = await this.findById(userId);
+    const limit = Math.min(Math.max(Number(input?.limit ?? "20") || 20, 1), 50);
+    const lowerName = (user.name ?? "").trim().toLowerCase();
+    const mentionNeedle = lowerName ? `@${lowerName}` : "";
+
+    const replyRows = await this.repliesRepo
+      .createQueryBuilder("r")
+      .leftJoin("r.thread", "t")
+      .leftJoin("r.author", "author")
+      .leftJoin("t.author", "threadAuthor")
+      .select("r.id", "replyId")
+      .addSelect("r.content", "content")
+      .addSelect("r.createdAt", "createdAt")
+      .addSelect("t.id", "threadId")
+      .addSelect("t.title", "threadTitle")
+      .addSelect("threadAuthor.id", "threadAuthorId")
+      .addSelect("author.id", "actorId")
+      .addSelect("author.name", "actorName")
+      .addSelect("author.avatarUrl", "actorAvatarUrl")
+      .where("t.status = :status", { status: "approved" })
+      .andWhere("author.id != :userId", { userId })
+      .andWhere("(threadAuthor.id = :userId OR LOWER(r.content) LIKE :mentionLike)", {
+        userId,
+        mentionLike: mentionNeedle ? `%${mentionNeedle}%` : "%@@__never__match__@@%",
+      })
+      .orderBy("r.createdAt", "DESC")
+      .limit(limit * 8)
+      .getRawMany<{
+        replyId: string;
+        content: string;
+        createdAt: Date;
+        threadId: string;
+        threadTitle: string;
+        threadAuthorId: string;
+        actorId: string;
+        actorName: string;
+        actorAvatarUrl: string | null;
+      }>();
+
+    const replyAlerts = new Map<
+      string,
+      {
+        id: string;
+        type: "reply" | "mention";
+        createdAt: string;
+        message: string;
+        thread: { id: string; title: string };
+        reply: { id: string; excerpt: string };
+        actor: { id: string; name: string; avatarUrl: string | null };
+      }
+    >();
+
+    for (const row of replyRows) {
+      const content = row.content ?? "";
+      const isMention = mentionNeedle ? content.toLowerCase().includes(mentionNeedle) : false;
+      const type: "reply" | "mention" = isMention ? "mention" : "reply";
+      const message =
+        type === "mention" ? `${row.actorName} از شما منشن کرد.` : `${row.actorName} به موضوع شما پاسخ داد.`;
+      const id = `${type}:${row.replyId}`;
+      if (replyAlerts.has(id)) continue;
+      replyAlerts.set(id, {
+        id,
+        type,
+        createdAt: new Date(row.createdAt).toISOString(),
+        message,
+        thread: { id: row.threadId, title: row.threadTitle },
+        reply: { id: row.replyId, excerpt: content.slice(0, 160) },
+        actor: { id: row.actorId, name: row.actorName, avatarUrl: row.actorAvatarUrl ?? null },
+      });
+    }
+
+    const threadRows = await this.threadsRepo
+      .createQueryBuilder("t")
+      .leftJoin("t.author", "author")
+      .select("t.id", "id")
+      .addSelect("t.title", "title")
+      .addSelect("t.updatedAt", "updatedAt")
+      .addSelect("t.repliesCount", "repliesCount")
+      .addSelect("t.likesCount", "likesCount")
+      .where("author.id = :userId", { userId })
+      .andWhere("t.status = :status", { status: "approved" })
+      .andWhere("(t.repliesCount > 0 OR t.likesCount > 0)")
+      .orderBy("t.updatedAt", "DESC")
+      .limit(limit * 2)
+      .getRawMany<{ id: string; title: string; updatedAt: Date; repliesCount: string; likesCount: string }>();
+
+    const activityAlerts = threadRows.map((row) => ({
+      id: `thread-activity:${row.id}`,
+      type: "thread_activity" as const,
+      createdAt: new Date(row.updatedAt).toISOString(),
+      message: `موضوع شما ${Number(row.repliesCount) || 0} پاسخ و ${Number(row.likesCount) || 0} لایک دارد.`,
+      thread: { id: row.id, title: row.title },
+    }));
+
+    const items = [...replyAlerts.values(), ...activityAlerts]
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0))
+      .slice(0, limit);
+
+    return { items, nextCursor: null };
+  }
+
   avatarSamples() {
     const items = Array.from({ length: 8 }).map((_, i) => ({ url: `/uploads/avatars/sample-${i + 1}.svg` }));
     return { items };

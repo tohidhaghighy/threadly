@@ -38,8 +38,10 @@ export function AppSidebar() {
             <Cpu className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="text-base font-extrabold text-gradient-primary">Threadly</span>
-            <span className="text-[10px] text-muted-foreground">انجمن گفتگو</span>
+            <span className="text-[11px] font-extrabold leading-snug text-gradient-primary md:text-xs">{t("site.headerbrand")}</span>
+            {t("site.tagline").trim() ? (
+              <span className="text-[10px] text-muted-foreground">{t("site.tagline")}</span>
+            ) : null}
           </div>
         </Link>
       </SidebarHeader>
