@@ -23,11 +23,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { buildSeo } from "@/lib/seo";
+import { formatKeywordsInput, parseKeywordsInput } from "@/lib/page-seo";
 
 type CategoryAdminItem = {
   id: string;
   title: string;
   description: string | null;
+  seoKeywords: string[];
   order: number;
   isActive: boolean;
   threadsCount: number;
@@ -60,12 +62,14 @@ function AdminCategoriesPage() {
 
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
+  const [formSeoKeywords, setFormSeoKeywords] = useState("");
   const [formOrder, setFormOrder] = useState("0");
   const [formActive, setFormActive] = useState(true);
 
   const resetForm = () => {
     setFormTitle("");
     setFormDescription("");
+    setFormSeoKeywords("");
     setFormOrder("0");
     setFormActive(true);
   };
@@ -91,6 +95,7 @@ function AdminCategoriesPage() {
         body: JSON.stringify({
           title,
           description: description ? description : undefined,
+          seoKeywords: parseKeywordsInput(formSeoKeywords),
           order: Number.isFinite(order) ? order : 0,
           isActive: formActive,
         }),
@@ -118,6 +123,7 @@ function AdminCategoriesPage() {
         body: JSON.stringify({
           title,
           description,
+          seoKeywords: parseKeywordsInput(formSeoKeywords),
           order: Number.isFinite(order) ? order : 0,
           isActive: formActive,
         }),
@@ -160,6 +166,7 @@ function AdminCategoriesPage() {
     setEditing(c);
     setFormTitle(c.title);
     setFormDescription(c.description ?? "");
+    setFormSeoKeywords(formatKeywordsInput(c.seoKeywords ?? []));
     setFormOrder(String(c.order ?? 0));
     setFormActive(c.isActive);
     setEditOpen(true);
@@ -275,6 +282,14 @@ function AdminCategoriesPage() {
               />
             </div>
             <div className="grid gap-2">
+              <Label>برچسب‌های SEO (با ویرگول)</Label>
+              <Input
+                value={formSeoKeywords}
+                onChange={(e) => setFormSeoKeywords(e.target.value)}
+                placeholder="کیس، مونتاژ، GPU"
+              />
+            </div>
+            <div className="grid gap-2">
               <Label>{t("adminCategories.fieldOrder")}</Label>
               <Input value={formOrder} onChange={(e) => setFormOrder(e.target.value)} inputMode="numeric" />
             </div>
@@ -316,6 +331,10 @@ function AdminCategoriesPage() {
             <div className="grid gap-2">
               <Label>{t("adminCategories.fieldDesc")}</Label>
               <Input value={formDescription} onChange={(e) => setFormDescription(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label>برچسب‌های SEO (با ویرگول)</Label>
+              <Input value={formSeoKeywords} onChange={(e) => setFormSeoKeywords(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label>{t("adminCategories.fieldOrder")}</Label>

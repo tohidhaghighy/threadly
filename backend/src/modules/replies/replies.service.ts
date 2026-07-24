@@ -7,6 +7,7 @@ import { ReplyLikeEntity } from "../../persistence/entities/reply-like.entity";
 import { ReplyReactionEntity } from "../../persistence/entities/reply-reaction.entity";
 import { ReplyAttachmentEntity } from "../../persistence/entities/reply-attachment.entity";
 import { UsersService } from "../users/users.service";
+import { sanitizeUserHtml, stripHtmlToText } from "../../common/html-sanitize.util";
 import type { ReplyReactionEmoji } from "./reply-interactions.constants";
 
 export type ReplyReactionSummary = { emoji: string; count: number; reactedByMe: boolean };
@@ -158,7 +159,12 @@ export class RepliesService {
       }
     }
 
-    const entity = this.repliesRepo.create({ thread, author, content: input.content, likesCount: 0 });
+    const content = sanitizeUserHtml(input.content);
+    if (stripHtmlToText(content).length < 2) {
+      throw new ForbiddenException("Reply content is too short");
+    }
+
+    const entity = this.repliesRepo.create({ thread, author, content, likesCount: 0 });
     const saved = await this.repliesRepo.save(entity);
 
     thread.repliesCount += 1;

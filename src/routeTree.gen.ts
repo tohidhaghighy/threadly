@@ -23,6 +23,7 @@ import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as UsersIdRouteImport } from './routes/users.$id'
 import { Route as ThreadsIdRouteImport } from './routes/threads.$id'
+import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminCommentsRouteImport } from './routes/admin.comments'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 
@@ -96,6 +97,11 @@ const ThreadsIdRoute = ThreadsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ThreadsRoute,
 } as any)
+const AdminSeoRoute = AdminSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCommentsRoute = AdminCommentsRouteImport.update({
   id: '/comments',
   path: '/comments',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof UsersRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/comments': typeof AdminCommentsRoute
+  '/admin/seo': typeof AdminSeoRoute
   '/threads/$id': typeof ThreadsIdRoute
   '/users/$id': typeof UsersIdRoute
   '/settings/': typeof SettingsIndexRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/comments': typeof AdminCommentsRoute
+  '/admin/seo': typeof AdminSeoRoute
   '/threads/$id': typeof ThreadsIdRoute
   '/users/$id': typeof UsersIdRoute
   '/settings': typeof SettingsIndexRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/users': typeof UsersRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/comments': typeof AdminCommentsRoute
+  '/admin/seo': typeof AdminSeoRoute
   '/threads/$id': typeof ThreadsIdRoute
   '/users/$id': typeof UsersIdRoute
   '/settings/': typeof SettingsIndexRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/admin/categories'
     | '/admin/comments'
+    | '/admin/seo'
     | '/threads/$id'
     | '/users/$id'
     | '/settings/'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin/categories'
     | '/admin/comments'
+    | '/admin/seo'
     | '/threads/$id'
     | '/users/$id'
     | '/settings'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/admin/categories'
     | '/admin/comments'
+    | '/admin/seo'
     | '/threads/$id'
     | '/users/$id'
     | '/settings/'
@@ -325,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThreadsIdRouteImport
       parentRoute: typeof ThreadsRoute
     }
+    '/admin/seo': {
+      id: '/admin/seo'
+      path: '/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AdminSeoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/comments': {
       id: '/admin/comments'
       path: '/comments'
@@ -345,11 +364,13 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCommentsRoute: typeof AdminCommentsRoute
+  AdminSeoRoute: typeof AdminSeoRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCommentsRoute: AdminCommentsRoute,
+  AdminSeoRoute: AdminSeoRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

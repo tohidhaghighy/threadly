@@ -11,7 +11,10 @@ import { useQuery } from "@tanstack/react-query";
 import { api, type ThreadListItem } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
 import { useCategories } from "@/lib/categories";
-import { buildSeo } from "@/lib/seo";
+import { buildSeo, useSeo } from "@/lib/seo";
+import { getCategorySeoCopy } from "@/lib/seo-content";
+import { buildCategoryCollectionJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo-schema";
+import { PAGE_SEO_KEYS, pageSeoToInput, usePageSeo } from "@/lib/page-seo";
 
 export const Route = createFileRoute("/threads/")({
   head: () => {
@@ -39,6 +42,48 @@ function ThreadsPage() {
   const [loading, setLoading] = useState(true);
   const categoriesQuery = useCategories();
   const categories = categoriesQuery.data?.items ?? [];
+
+  const threadsPageSeo = usePageSeo(PAGE_SEO_KEYS.threads);
+
+  const activeCategoryMeta = useMemo(() => {
+    if (!activeCat) return null;
+    const cat = categories.find((c) => c.title === activeCat);
+    return { ...getCategorySeoCopy(activeCat, cat?.description), keywords: cat?.seoKeywords ?? [] };
+  }, [activeCat, categories]);
+
+  const seoInput = useMemo(() => {
+    if (activeCat && activeCategoryMeta) {
+      const path = `/threads?category=${encodeURIComponent(activeCat)}`;
+      return {
+        title: `گفتگوهای ${activeCat}`,
+        description: activeCategoryMeta.short,
+        path,
+        keywords: activeCategoryMeta.keywords,
+        jsonLd: [
+          buildCategoryCollectionJsonLd({
+            title: `گفتگوهای ${activeCat}`,
+            description: activeCategoryMeta.long,
+            path,
+          }),
+          buildBreadcrumbJsonLd([
+            { name: "خانه", path: "/" },
+            { name: "گفتگوها", path: "/threads" },
+            { name: activeCat, path },
+          ]),
+        ],
+      };
+    }
+    const base = threadsPageSeo.data
+      ? pageSeoToInput(threadsPageSeo.data)
+      : {
+          title: "گفتگوها",
+          description: "مرور سوال‌ها و گفتگوهای تأیید شده در انجمن فاطر.",
+          path: "/threads",
+        };
+    return base;
+  }, [activeCat, activeCategoryMeta, threadsPageSeo.data]);
+
+  useSeo(seoInput);
 
   useEffect(() => {
     setQ(search.q ?? "");
@@ -90,9 +135,11 @@ function ThreadsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
       <AnimatedSection className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold">همه گفتگوها</h1>
+        <h1 className="text-3xl font-extrabold">
+          {activeCat ? `گفتگوهای ${activeCat}` : "همه گفتگوها"}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          {threads.length} موضوع فعال در {categories.length} دسته
+          {activeCategoryMeta?.short ?? `${threads.length} موضوع فعال در ${categories.length} دسته`}
         </p>
       </AnimatedSection>
 

@@ -1,0 +1,19 @@
+{
+  "name": "انجمن فاطر",
+  "short_name": "فاطر",
+  "description": "انجمن گفتگو برای ساخت کیس، عیب‌یابی و گیمینگ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "lang": "fa-IR",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

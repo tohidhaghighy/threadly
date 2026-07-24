@@ -6,11 +6,7 @@ import { UsersService } from "../users/users.service";
 import { ThreadLikeEntity } from "../../persistence/entities/thread-like.entity";
 import { ThreadViewEntity } from "../../persistence/entities/thread-view.entity";
 import { ReplyEntity } from "../../persistence/entities/reply.entity";
-
-function makeExcerpt(content: string) {
-  const trimmed = content.trim();
-  return trimmed.length > 160 ? trimmed.slice(0, 160) + "..." : trimmed;
-}
+import { sanitizeUserHtml, stripHtmlToText, makePlainExcerpt } from "../../common/html-sanitize.util";
 
 @Injectable()
 export class ThreadsService {
@@ -113,10 +109,14 @@ export class ThreadsService {
 
   async createPending(input: { authorId: string; title: string; content: string; category: string; tags: string[]; language?: "fa" | "en" }) {
     const author = await this.users.findById(input.authorId);
+    const content = sanitizeUserHtml(input.content);
+    if (stripHtmlToText(content).length < 10) {
+      throw new ForbiddenException("Content is too short");
+    }
     const entity = this.threadsRepo.create({
-      title: input.title,
-      content: input.content,
-      excerpt: makeExcerpt(input.content),
+      title: input.title.trim(),
+      content,
+      excerpt: makePlainExcerpt(content),
       category: input.category,
       tags: input.tags,
       status: "pending",

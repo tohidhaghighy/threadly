@@ -33,6 +33,7 @@ export class CategoriesService {
         id: c.id,
         title: c.title,
         description: c.description,
+        seoKeywords: c.seoKeywords ?? [],
         order: c.order,
         isActive: c.isActive,
         threadsCount: countsBy.get(c.title) ?? 0,
@@ -60,6 +61,7 @@ export class CategoriesService {
         id: c.id,
         title: c.title,
         description: c.description,
+        seoKeywords: c.seoKeywords ?? [],
         order: c.order,
         isActive: c.isActive,
         threadsCount: countsBy.get(c.title) ?? 0,
@@ -73,6 +75,7 @@ export class CategoriesService {
     const entity = this.categoriesRepo.create({
       title: dto.title.trim(),
       description: dto.description?.trim() ?? null,
+      seoKeywords: dto.seoKeywords?.map((k) => k.trim()).filter(Boolean) ?? [],
       order: dto.order ?? 0,
       isActive: dto.isActive ?? true,
     });
@@ -90,6 +93,9 @@ export class CategoriesService {
       // do nothing
     } else if (dto.description === "") {
       c.description = null;
+    }
+    if (Array.isArray(dto.seoKeywords)) {
+      c.seoKeywords = dto.seoKeywords.map((k) => k.trim()).filter(Boolean);
     }
     if (typeof dto.order === "number") c.order = dto.order;
     if (typeof dto.isActive === "boolean") c.isActive = dto.isActive;

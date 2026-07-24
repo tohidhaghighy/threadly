@@ -8,6 +8,7 @@ import { AdminOnlyGuard } from "../auth/roles.guard";
 import { ReplyEntity } from "../../persistence/entities/reply.entity";
 import { ThreadEntity } from "../../persistence/entities/thread.entity";
 import { UserEntity } from "../../persistence/entities/user.entity";
+import { sanitizeUserHtml, stripHtmlToText } from "../../common/html-sanitize.util";
 
 @ApiTags("admin")
 @ApiBearerAuth()
@@ -24,8 +25,13 @@ export class AdminRepliesController {
   @ApiBody({ schema: { example: { content: "متن جدید کامنت" } } })
   @ApiResponse({ status: 200, schema: { example: { id: "uuid", content: "متن جدید کامنت" } } })
   async update(@Param("id") id: string, @Body() dto: { content?: string }) {
-    const content = (dto.content ?? "").trim();
-    if (!content) {
+    const raw = (dto.content ?? "").trim();
+    if (!raw) {
+      return { id, content: "" };
+    }
+
+    const content = sanitizeUserHtml(raw);
+    if (stripHtmlToText(content).length < 2) {
       return { id, content: "" };
     }
 

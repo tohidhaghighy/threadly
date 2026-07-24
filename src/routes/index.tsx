@@ -16,24 +16,34 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api, type ThreadListItem } from "@/lib/api";
 import { useCategories } from "@/lib/categories";
 import { buildSeo } from "@/lib/seo";
+import { buildOrganizationJsonLd, buildWebSiteJsonLd } from "@/lib/seo-schema";
+import { getCategorySeoCopy, HOME_SEO_META } from "@/lib/seo-content";
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => {
     const seo = buildSeo({
       titleAbsolute: "انجمن فاطر — گفتگو و ساخت کیس",
-      description:
-        "در انجمن گفتگوی فاطر سوال بپرسید، تجربه و اسمبل خود را به اشتراک بگذارید و پاسخ بگیرید.",
+      description: HOME_SEO_META,
       path: "/",
       type: "website",
+      jsonLd: [buildWebSiteJsonLd(), buildOrganizationJsonLd()],
     });
-    return { meta: seo.meta, links: seo.links };
+    return { meta: seo.meta, links: seo.links, scripts: seo.scripts };
   },
   component: Index,
 });
 
 function Index() {
   const { t } = useI18n();
+  useStaticPageSeo(PAGE_SEO_KEYS.home, {
+    titleAbsolute: "انجمن فاطر — گفتگو و ساخت کیس",
+    description: HOME_SEO_META,
+    path: "/",
+    type: "website",
+    jsonLd: [buildWebSiteJsonLd(), buildOrganizationJsonLd()],
+  });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -283,7 +293,7 @@ function Index() {
                 const mock = mockByTitle.get(cat.title);
                 const Icon = mock?.icon;
                 const color = mock?.color ?? "from-orange-500/20 to-amber-500/10";
-                const description = cat.description ?? mock?.description ?? "";
+                const description = getCategorySeoCopy(cat.title, cat.description ?? mock?.description).short;
                 return (
                 <Link
                   key={cat.id}

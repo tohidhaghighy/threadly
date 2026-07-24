@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import type { ApiError } from "@/lib/api";
 import { buildSeo } from "@/lib/seo";
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
 
 type LoginValues = { email: string; password: string };
 
@@ -31,6 +32,12 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  useStaticPageSeo(PAGE_SEO_KEYS.login, {
+    title: "ورود",
+    description: "ورود به حساب کاربری در انجمن فاطر.",
+    path: "/login",
+    noindex: true,
+  });
   const navigate = useNavigate();
   const auth = useAuth();
   const { t } = useI18n();
@@ -74,7 +81,7 @@ function LoginPage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 <LogIn className="h-5 w-5" />
               </span>
-              {t("auth.signIn")}
+              <h1 className="text-2xl font-semibold leading-none tracking-tight">{t("auth.signIn")}</h1>
             </CardTitle>
             <CardDescription>{t("auth.enterEmailPassword")}</CardDescription>
           </CardHeader>

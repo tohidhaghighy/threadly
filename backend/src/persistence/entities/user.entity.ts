@@ -28,6 +28,18 @@ export class UserEntity {
   @Column({ type: "varchar", length: 512, nullable: true })
   avatarUrl!: string | null;
 
+  @Column({ type: "varchar", length: 20, nullable: true })
+  phone!: string | null;
+
+  @Column({ type: "varchar", length: 26, nullable: true })
+  bankShaba!: string | null;
+
+  @Column({ type: "varchar", length: 16, nullable: true })
+  cardNumber!: string | null;
+
+  @Column({ type: "varchar", length: 10, nullable: true })
+  birthDate!: string | null;
+
   /**
    * How many of the user's replies were deleted by admins.
    * Used for auto-moderation (ban after repeated removals).

@@ -1,5 +1,5 @@
-# Threadly - https://threadly.app
-# Crawler directives for the public forum.
+# انجمن فاطر (Threadly)
+# Update host below to your production domain.
 
 User-agent: *
 Allow: /
@@ -13,7 +13,24 @@ Disallow: /settings/
 Disallow: /new
 Disallow: /api/
 
-# Static sitemap (always available). The dynamic one (with thread URLs) is
-# served by the backend at /api/seo/sitemap.xml when deployed together.
-Sitemap: /sitemap.xml
-Sitemap: /api/seo/sitemap.xml
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /settings
+Disallow: /new
+Disallow: /api/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /settings
+Disallow: /new
+Disallow: /api/
+
+# Dynamic sitemap includes threads, categories, and public profiles (absolute URLs).
+Sitemap: https://threadly.app/sitemap.xml
+Sitemap: https://threadly.app/api/seo/sitemap.xml

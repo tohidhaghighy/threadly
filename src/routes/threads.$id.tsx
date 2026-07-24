@@ -1,19 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Coins, Heart, MessageCircle, Share2, Flag, ArrowRight, Image as ImageIcon, Code2, Send, CheckCircle2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Heart, MessageCircle, Share2, Flag, ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
-import { ReplyActions } from "@/components/ReplyActions";
+import { RichTextContent } from "@/components/shared/rich-text";
+import { ReplyItem } from "@/components/shared/thread/ReplyItem";
+import { ReplyComposer } from "@/components/shared/thread/ReplyComposer";
+import { stripHtmlToText } from "@/lib/sanitize-html";
 import { toast } from "sonner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type ReplyListItem, type ThreadDetail } from "@/lib/api";
 import type { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDistanceToNow } from "date-fns";
 import { buildSeo, useSeo } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, buildThreadDiscussionJsonLd, buildThreadQaPageJsonLd } from "@/lib/seo-schema";
+import { useRecordThreadView, useReplies, useSetBestReply, useThread, useToggleThreadLike } from "@/hooks/api";
 
 export const Route = createFileRoute("/threads/$id")({
   head: ({ params }) => {
@@ -23,13 +25,14 @@ export const Route = createFileRoute("/threads/$id")({
       path: `/threads/${params.id}`,
       type: "article",
     });
-    return { meta: seo.meta, links: seo.links };
+    return { meta: seo.meta, links: seo.links, scripts: seo.scripts };
   },
   errorComponent: ({ error }) => <div className="p-8 text-center text-destructive">{error.message}</div>,
   notFoundComponent: () => (
     <div className="p-8 text-center">
-      <p>این گفتگو پیدا نشد.</p>
-      <Link to="/threads" className="text-primary underline">بازگشت</Link>
+      <h1 className="text-xl font-extrabold">گفتگو پیدا نشد</h1>
+      <p className="mt-2 text-muted-foreground">این گفتگو وجود ندارد یا هنوز تأیید نشده است.</p>
+      <Link to="/threads" className="mt-4 inline-block text-primary underline">بازگشت به گفتگوها</Link>
     </div>
   ),
   component: ThreadPage,
@@ -38,89 +41,62 @@ export const Route = createFileRoute("/threads/$id")({
 function ThreadPage() {
   const { id } = Route.useParams();
   const [loading, setLoading] = useState(true);
-  const [answer, setAnswer] = useState("");
-  const [likeBusy, setLikeBusy] = useState(false);
-  const [replyImages, setReplyImages] = useState<File[]>([]);
   const [shareBusy, setShareBusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const auth = useAuth();
-  const qc = useQueryClient();
 
-  const replyImagePreviews = useMemo(
-    () => replyImages.map((f) => ({ file: f, url: URL.createObjectURL(f) })),
-    [replyImages],
-  );
-
-  useEffect(() => {
-    return () => {
-      for (const it of replyImagePreviews) URL.revokeObjectURL(it.url);
-    };
-  }, [replyImagePreviews]);
-
-  const threadQuery = useQuery({
-    queryKey: ["thread", id],
-    queryFn: () =>
-      api<ThreadDetail>(`/api/threads/${id}`, {
-        authOptional: true,
-      }),
-  });
-
-  const repliesQuery = useQuery({
-    queryKey: ["replies", id],
-    queryFn: () =>
-      api<{ items: ReplyListItem[]; nextCursor: string | null }>(`/api/threads/${id}/replies`, {
-        authOptional: true,
-      }),
-    enabled: threadQuery.isSuccess,
-  });
+  const threadQuery = useThread(id);
+  const repliesQuery = useReplies(id, threadQuery.isSuccess);
+  const recordView = useRecordThreadView(id);
+  const toggleLike = useToggleThreadLike(id);
+  const setBestReply = useSetBestReply(id);
 
   const thread = threadQuery.data;
   const replies = repliesQuery.data?.items ?? [];
   const canPickBestAnswer = !!auth.user && !!thread && (auth.user.id === thread.author.id || auth.isAdmin);
 
   const firstImageAttachment = thread?.attachments?.find((a) => a.mimeType.startsWith("image/"))?.url;
-  useSeo(
-    thread
-      ? {
-          title: thread.title,
-          description: thread.excerpt ?? thread.content?.slice(0, 160),
-          path: `/threads/${thread.id}`,
-          type: "article",
-          image: firstImageAttachment,
-          publishedTime: thread.createdAt,
-          author: thread.author.displayName,
-          jsonLd: {
-            "@context": "https://schema.org",
-            "@type": "DiscussionForumPosting",
-            headline: thread.title,
-            articleBody: thread.content ?? thread.excerpt ?? "",
-            datePublished: thread.createdAt,
-            author: {
-              "@type": "Person",
-              name: thread.author.displayName,
-            },
-            interactionStatistic: [
-              {
-                "@type": "InteractionCounter",
-                interactionType: "https://schema.org/LikeAction",
-                userInteractionCount: thread.counts.likesCount,
-              },
-              {
-                "@type": "InteractionCounter",
-                interactionType: "https://schema.org/CommentAction",
-                userInteractionCount: thread.counts.repliesCount,
-              },
-              {
-                "@type": "InteractionCounter",
-                interactionType: "https://schema.org/ViewAction",
-                userInteractionCount: thread.counts.viewsCount,
-              },
-            ],
-            keywords: (thread.tags ?? []).join(", "),
-          },
-        }
-      : null,
-  );
+
+  const seoInput = useMemo(() => {
+    if (threadQuery.isError) {
+      return {
+        title: "گفتگو پیدا نشد",
+        description: "این گفتگو وجود ندارد یا هنوز تأیید نشده است.",
+        path: `/threads/${id}`,
+        noindex: true,
+      };
+    }
+    if (!thread) return null;
+    const jsonLd = [
+      buildThreadQaPageJsonLd(thread, replies),
+      buildThreadDiscussionJsonLd(thread),
+      buildBreadcrumbJsonLd([
+        { name: "خانه", path: "/" },
+        { name: "گفتگوها", path: "/threads" },
+        {
+          name: thread.category,
+          path: `/threads?category=${encodeURIComponent(thread.category)}`,
+        },
+        { name: thread.title, path: `/threads/${thread.id}` },
+      ]),
+    ];
+    return {
+      title: thread.title,
+      description: thread.excerpt ?? stripHtmlToText(thread.content ?? "").slice(0, 160),
+      path: `/threads/${thread.id}`,
+      type: "article" as const,
+      image: firstImageAttachment,
+      imageAlt: thread.title,
+      publishedTime: thread.createdAt,
+      modifiedTime: thread.updatedAt,
+      author: thread.author.displayName,
+      section: thread.category,
+      tags: thread.tags ?? [],
+      keywords: [thread.category, ...(thread.tags ?? [])].filter(Boolean),
+      jsonLd,
+    };
+  }, [thread, replies, firstImageAttachment, threadQuery.isError, id]);
+
+  useSeo(seoInput);
 
   const headerModel = useMemo(() => {
     if (!thread) return null;
@@ -144,17 +120,9 @@ function ThreadPage() {
   }, [thread]);
 
   useEffect(() => {
-    // count a view after the thread is opened (auth-aware, de-duped per user on backend)
-    void api<{ viewsCount: number }>(`/api/threads/${id}/view`, {
-      method: "POST",
-      authOptional: true,
-    })
-      .then(async () => {
-        await qc.invalidateQueries({ queryKey: ["thread", id] });
-        await qc.invalidateQueries({ queryKey: ["threads"] });
-      })
-      .catch(() => {});
-  }, [id, qc]);
+    recordView.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   useEffect(() => {
     const t = window.setTimeout(() => setLoading(false), 450);
@@ -229,13 +197,15 @@ function ThreadPage() {
         </div>
 
         <div className="space-y-4 p-6 text-base leading-relaxed text-foreground/90">
-          {headerModel?.content ? <p className="whitespace-pre-wrap">{headerModel.content}</p> : null}
+          {headerModel?.content ? (
+            <RichTextContent html={headerModel.content} className="text-base text-foreground/90" />
+          ) : null}
 
           {headerModel?.attachments && headerModel.attachments.length > 0 ? (
             <div className="rounded-lg border border-border/60 bg-muted/40 p-4">
               <p className="mb-3 text-xs font-semibold text-muted-foreground">تصاویر پیوست</p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {headerModel.attachments.map((a) => (
+                {headerModel.attachments.map((a, idx) => (
                   <a
                     key={a.id}
                     href={a.url}
@@ -246,7 +216,7 @@ function ThreadPage() {
                   >
                     <img
                       src={a.url}
-                      alt="تصویر پیوست"
+                      alt={`پیوست ${idx + 1} — ${headerModel.title}`}
                       className="h-28 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                       loading="lazy"
                     />
@@ -265,25 +235,17 @@ function ThreadPage() {
           <Button
             variant="glow"
             size="sm"
-            disabled={!auth.token || likeBusy || !thread}
+            disabled={!auth.token || toggleLike.isPending || !thread}
             onClick={async () => {
               if (!auth.token) {
                 toast.error("برای لایک باید وارد شوید.");
                 return;
               }
               if (!thread) return;
-              setLikeBusy(true);
               try {
-                await api<{ likesCount: number; likedByMe: boolean }>(`/api/threads/${thread.id}/like`, {
-                  method: "POST",
-                  auth: true,
-                });
-                await qc.invalidateQueries({ queryKey: ["thread", id] });
-                await qc.invalidateQueries({ queryKey: ["threads"] });
+                await toggleLike.mutateAsync();
               } catch {
                 toast.error("عملیات انجام نشد. دوباره تلاش کنید.");
-              } finally {
-                setLikeBusy(false);
               }
             }}
           >
@@ -352,183 +314,31 @@ function ThreadPage() {
             </div>
           ) : null}
           {replies.map((r) => (
-            <div key={r.id} className="rounded-xl border border-border/60 bg-card p-5 shadow-card">
-              <div className="flex items-start gap-3">
-                <Avatar className="h-10 w-10 ring-2 ring-border">
-        {r.author.avatarUrl ? <AvatarImage src={r.author.avatarUrl} alt={r.author.displayName} /> : null}
-        <AvatarFallback className="bg-secondary text-sm font-bold">
-          {(r.author.displayName[0] ?? "ک").toUpperCase()}
-        </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold">{r.author.displayName}</span>
-                    {r.isBest ? (
-                      <Badge className="gap-1 border border-emerald-500/30 bg-emerald-500/10 text-emerald-600">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        پاسخ برتر
-                      </Badge>
-                    ) : null}
-                    <span className="text-xs text-muted-foreground">
-                      • {formatDistanceToNow(new Date(r.createdAt), { addSuffix: true })}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-foreground/90">{r.content}</p>
-                  {(r.attachments ?? []).length ? (
-                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {r.attachments.map((a) => (
-                        <a
-                          key={a.id}
-                          href={a.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="group relative overflow-hidden rounded-lg border border-border/60 bg-muted/20"
-                          title="باز کردن تصویر"
-                        >
-                          <img
-                            src={a.url}
-                            alt="تصویر ضمیمه"
-                            className="h-24 w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                            loading="lazy"
-                          />
-                        </a>
-                      ))}
-                    </div>
-                  ) : null}
-                  <ReplyActions reply={r} threadId={id} />
-                  {canPickBestAnswer ? (
-                    <div className="mt-2">
-                      <Button
-                        variant={r.isBest ? "outline" : "secondary"}
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            const res = await api<{ bestReplyId: string | null }>(`/api/threads/${id}/best-reply/${r.id}`, {
-                              method: "POST",
-                              auth: true,
-                            });
-                            if (res.bestReplyId) toast.success("پاسخ برتر انتخاب شد.");
-                            else toast.success("پاسخ برتر حذف شد.");
-                            await qc.invalidateQueries({ queryKey: ["replies", id] });
-                            await qc.invalidateQueries({ queryKey: ["thread", id] });
-                            await qc.invalidateQueries({ queryKey: ["threads"] });
-                          } catch (err) {
-                            const e = err as ApiError;
-                            toast.error(e?.message ?? "امکان انتخاب پاسخ برتر نیست.");
-                          }
-                        }}
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        {r.isBest ? "حذف پاسخ برتر" : "انتخاب به عنوان پاسخ برتر"}
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </div>
+            <ReplyItem
+              key={r.id}
+              reply={r}
+              threadId={id}
+              canPickBestAnswer={canPickBestAnswer}
+              bestBusy={setBestReply.isPending}
+              onToggleBest={async (replyId) => {
+                try {
+                  const res = await setBestReply.mutateAsync(replyId);
+                  if (res.bestReplyId) toast.success("پاسخ برتر انتخاب شد.");
+                  else toast.success("پاسخ برتر حذف شد.");
+                } catch (err) {
+                  const e = err as ApiError;
+                  toast.error(e?.message ?? "امکان انتخاب پاسخ برتر نیست.");
+                }
+              }}
+            />
           ))}
         </div>
 
-        <div className="mt-6 rounded-xl border border-border/60 bg-card p-4 shadow-card">
-          <p className="mb-3 text-sm font-semibold">پاسخ شما</p>
-          <Textarea
-            placeholder="پاسخ خود را بنویسید..."
-            className="min-h-32 resize-none bg-muted/30"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-          />
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="sr-only"
-            onChange={(e) => {
-              const files = Array.from(e.target.files ?? []);
-              const onlyImages = files.filter((f) => f.type.startsWith("image/"));
-              if (onlyImages.length !== files.length) toast.error("فقط فایل تصویری مجاز است.");
-              setReplyImages((prev) => [...prev, ...onlyImages]);
-              e.currentTarget.value = "";
-            }}
-          />
-          {replyImages.length ? (
-            <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {replyImagePreviews.map(({ file: f, url }) => {
-                return (
-                  <button
-                    key={`${f.name}-${f.size}-${f.lastModified}`}
-                    type="button"
-                    className="group relative overflow-hidden rounded-lg border border-border/60 bg-muted/20"
-                    title="حذف تصویر"
-                    onClick={() => {
-                      URL.revokeObjectURL(url);
-                      setReplyImages((prev) => prev.filter((x) => x !== f));
-                    }}
-                  >
-                    <img src={url} alt={f.name} className="h-20 w-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 transition group-hover:opacity-100" />
-                    <span className="absolute bottom-1 end-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
-                      حذف
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-          <div className="mt-3 flex items-center justify-between">
-            <div className="flex gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => fileRef.current?.click()}
-                disabled={!auth.token}
-                title={auth.token ? "افزودن تصویر" : "برای ارسال پاسخ وارد شوید"}
-              >
-                <ImageIcon className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon"><Code2 className="h-4 w-4" /></Button>
-            </div>
-            <Button
-              variant="hero"
-              size="sm"
-              disabled={!auth.token || !thread || repliesQuery.isFetching}
-              onClick={async () => {
-                const body = answer.trim();
-                if (!body) return;
-                if (!thread) return;
-                try {
-                  const created = await api<{ id: string }>(`/api/threads/${thread.id}/replies`, {
-                    method: "POST",
-                    auth: true,
-                    body: JSON.stringify({ content: body }),
-                  });
-                  if (replyImages.length) {
-                    const fd = new FormData();
-                    for (const f of replyImages) fd.append("images", f);
-                    await api<{ attachments: unknown[] }>(`/api/threads/${thread.id}/replies/${created.id}/images`, {
-                      method: "POST",
-                      auth: true,
-                      body: fd,
-                    });
-                  }
-                  setAnswer("");
-                  setReplyImages([]);
-                  toast.success("پاسخ ارسال شد — +۲ امتیاز", {
-                    icon: <Coins className="h-4 w-4 text-amber-500" />,
-                  });
-                  await qc.invalidateQueries({ queryKey: ["replies", id] });
-                  await qc.invalidateQueries({ queryKey: ["thread", id] });
-                } catch (err) {
-                  const e = err as ApiError;
-                  toast.error(e?.message ?? "امکان ارسال پاسخ نیست. دوباره تلاش کنید.");
-                }
-              }}
-            >
-              <Send className="h-4 w-4" /> ارسال پاسخ
-            </Button>
-          </div>
-        </div>
+        <ReplyComposer
+          threadId={id}
+          canPost={!!auth.token && !!thread}
+          disabled={repliesQuery.isFetching}
+        />
       </section>
     </div>
   );

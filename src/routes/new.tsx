@@ -1,22 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bold, Italic, List, Link as LinkIcon, Image as ImageIcon, Code2, Upload, Eye, CheckCircle2, Clock } from "lucide-react";
+import { Upload, CheckCircle2, Clock, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/shared/rich-text";
+import { stripHtmlToText } from "@/lib/sanitize-html";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { categories as mockCategories } from "@/lib/mock-data";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { createThread, uploadThreadImages } from "@/api/threads";
 import { useAuth } from "@/lib/auth";
 import { useI18n, tStatic } from "@/lib/i18n";
 import type { ApiError } from "@/lib/api";
-import { useCategories } from "@/lib/categories";
+import { useCategories, useUserProfile } from "@/hooks/api";
 import { buildSeo } from "@/lib/seo";
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
+import { needsPhoneForSupport } from "@/components/shared/profile/PhoneRequiredBanner";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/new")({
   head: () => {
@@ -32,6 +36,11 @@ export const Route = createFileRoute("/new")({
 });
 
 function NewTopic() {
+  useStaticPageSeo(PAGE_SEO_KEYS.new, {
+    title: "ایجاد موضوع",
+    description: tStatic("new.metaDescription"),
+    path: "/new",
+  });
   const [submitted, setSubmitted] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<string | null>(null);
@@ -44,6 +53,9 @@ function NewTopic() {
   const categoriesQuery = useCategories();
   const categories = categoriesQuery.data?.items ?? [];
   const iconByTitle = new Map(mockCategories.map((c) => [c.title, c.icon]));
+  const profileQuery = useUserProfile(auth.user?.id ?? "", { enabled: !!auth.user });
+  const mustSetPhone =
+    !!auth.user && needsPhoneForSupport(profileQuery.data?.points ?? 0, auth.user.phone);
 
   const imagePreviews = useMemo(() => {
     const items = images.map((f) => ({ file: f, url: URL.createObjectURL(f) }));
@@ -56,6 +68,23 @@ function NewTopic() {
       for (const it of imagePreviews) URL.revokeObjectURL(it.url);
     };
   }, [imagePreviews]);
+
+  if (mustSetPhone) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/15">
+          <Phone className="h-10 w-10 text-amber-600" />
+        </div>
+        <h1 className="mt-4 text-2xl font-extrabold">ثبت موبایل الزامی است</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          از سطح ۴ به بعد، ثبت موبایل اجباری است. برای ایجاد موضوع، ابتدا شماره موبایل را ثبت کنید تا پشتیبانی بتواند برای جوایز یا تماس با شما ارتباط بگیرد.
+        </p>
+        <Button asChild variant="hero" className="mt-6">
+          <Link to="/settings">رفتن به تنظیمات</Link>
+        </Button>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
@@ -97,37 +126,27 @@ function NewTopic() {
           if (!category) return;
 
           const trimmedTitle = title.trim();
-          const trimmedContent = content.trim();
+          const plainContent = stripHtmlToText(content);
           if (trimmedTitle.length < 10) {
             toast.error(t("new.errorTitleMin"));
             return;
           }
-          if (trimmedContent.length < 10) {
+          if (plainContent.length < 10) {
             toast.error(t("new.errorContentMin"));
             return;
           }
 
           try {
-            const created = await api<{ id: string; status: "pending" }>(`/api/threads`, {
-              method: "POST",
-              auth: true,
-              body: JSON.stringify({
-                title: trimmedTitle,
-                content: trimmedContent,
-                category,
-                tags: selectedTags,
-                language: "fa",
-              }),
+            const created = await createThread({
+              title: trimmedTitle,
+              content: content.trim(),
+              category,
+              tags: selectedTags,
+              language: "fa",
             });
 
             if (images.length > 0) {
-              const fd = new FormData();
-              for (const f of images) fd.append("images", f);
-              await api<{ attachments: unknown[] }>(`/api/threads/${created.id}/images`, {
-                method: "POST",
-                auth: true,
-                body: fd,
-              });
+              await uploadThreadImages(created.id, images);
             }
 
             setSubmitted(true);
@@ -233,26 +252,16 @@ function NewTopic() {
 
         <div className="grid gap-2">
           <Label className="text-sm font-semibold">{t("new.field.details")}</Label>
-          <div className="overflow-hidden rounded-lg border border-border/70 bg-background/70 shadow-sm backdrop-blur">
-            <div className="flex flex-wrap items-center gap-1 border-b border-border bg-muted/40 px-2 py-1.5">
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Bold className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Italic className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><List className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><LinkIcon className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><Code2 className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><ImageIcon className="h-4 w-4" /></Button>
-              <div className="ms-auto">
-                <Button type="button" variant="ghost" size="sm"><Eye className="h-4 w-4" /> {t("new.preview")}</Button>
-              </div>
-            </div>
-            <Textarea
-              required
-              placeholder={t("new.field.detailsPlaceholder")}
-              className="min-h-64 resize-none border-0 bg-transparent text-base focus-visible:ring-0"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-          </div>
+          <RichTextEditor
+            value={content}
+            onChange={setContent}
+            placeholder={t("new.field.detailsPlaceholder")}
+            minHeightClassName="min-h-72"
+            variant="user"
+          />
+          <p className="text-xs text-muted-foreground">
+            می‌توانید از bold، لیست و لینک استفاده کنید. محتوای خطرناک به‌صورت خودکار حذف می‌شود.
+          </p>
         </div>
 
         <div className="grid gap-2">

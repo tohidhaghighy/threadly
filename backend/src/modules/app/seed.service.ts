@@ -1,17 +1,25 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { DataSource, Not, Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
 import { UserEntity } from "../../persistence/entities/user.entity";
 import { CategoryEntity } from "../../persistence/entities/category.entity";
 import { ThreadEntity } from "../../persistence/entities/thread.entity";
 import { ReplyEntity } from "../../persistence/entities/reply.entity";
+import { ReplyLikeEntity } from "../../persistence/entities/reply-like.entity";
+import { ReplyReactionEntity } from "../../persistence/entities/reply-reaction.entity";
+import { ReplyAttachmentEntity } from "../../persistence/entities/reply-attachment.entity";
+import { AttachmentEntity } from "../../persistence/entities/attachment.entity";
+import { ThreadLikeEntity } from "../../persistence/entities/thread-like.entity";
+import { ThreadViewEntity } from "../../persistence/entities/thread-view.entity";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { ADMIN_FAQ_ITEMS, ADMIN_FAQ_SEED_TAG } from "./seed-admin-faq.data";
 
 @Injectable()
 export class SeedService {
   constructor(
+    private readonly dataSource: DataSource,
     @InjectRepository(UserEntity) private readonly usersRepo: Repository<UserEntity>,
     @InjectRepository(ThreadEntity) private readonly threadsRepo: Repository<ThreadEntity>,
     @InjectRepository(ReplyEntity) private readonly repliesRepo: Repository<ReplyEntity>,
@@ -19,9 +27,23 @@ export class SeedService {
   ) {}
 
   async clearAllThreadsAndReplies() {
-    // Delete replies first (then threads) to avoid FK issues even if cascade config changes.
-    await this.repliesRepo.clear();
-    await this.threadsRepo.clear();
+    await this.dataSource.transaction(async (manager) => {
+      await manager.getRepository(ReplyAttachmentEntity).clear();
+      await manager.getRepository(ReplyLikeEntity).clear();
+      await manager.getRepository(ReplyReactionEntity).clear();
+      await manager.getRepository(ReplyEntity).clear();
+      await manager.getRepository(ThreadLikeEntity).clear();
+      await manager.getRepository(ThreadViewEntity).clear();
+      await manager.getRepository(AttachmentEntity).clear();
+      await manager.getRepository(ThreadEntity).clear();
+    });
+  }
+
+  /** Remove all threads and every user except admin accounts. */
+  async clearAllExceptAdmin() {
+    await this.clearAllThreadsAndReplies();
+    const result = await this.usersRepo.delete({ role: Not("admin" as const) });
+    return { deletedUsers: result.affected ?? 0 };
   }
 
   private dedupeParagraphs(input: string): string {
@@ -84,16 +106,50 @@ export class SeedService {
 
   async seedCategories() {
     const defaults: Array<{ title: string; description: string; order: number }> = [
-      { title: "مونتاژ PC", description: "راهنمای ساخت، انتخاب قطعات و مونتاژ", order: 1 },
-      { title: "گیمینگ و ستاپ", description: "نصب، اجرا و بهینه‌سازی بازی‌ها و تنظیمات", order: 2 },
-      { title: "عیب‌یابی", description: "رفع مشکلات GPU، CPU، خنک‌کننده و پاور", order: 3 },
-      { title: "نمایش سیستم‌ها", description: "اشتراک‌گذاری ستاپ و اسمبل‌ها", order: 4 },
-      { title: "مانیتور و لوازم جانبی", description: "مانیتور، کیبورد، موس و هدست", order: 5 },
-      { title: "حافظه و ذخیره‌سازی", description: "SSD، HDD و مدیریت داده", order: 6 },
+      {
+        title: "مونتاژ کیس",
+        description:
+          "راهنمای ساخت کیس، انتخاب قطعات سازگار، مونتاژ امن، کابل‌کشی و airflow — پرسش و پاسخ با جامعه سازندگان.",
+        order: 1,
+      },
+      {
+        title: "گیمینگ و ستاپ",
+        description:
+          "بهینه‌سازی FPS، تنظیمات گرافیک، overclock ایمن، انتخاب مانیتور و تجربه اجرای بازی روی سخت‌افزار مختلف.",
+        order: 2,
+      },
+      {
+        title: "عیب‌یابی",
+        description:
+          "رفع No Display، BSOD، ریست زیر بار، دمای بالا، ناپایداری RAM/XMP و خطاهای POST — عیب‌یابی مرحله‌به‌مرحله.",
+        order: 3,
+      },
+      {
+        title: "نمایش سیستم‌ها",
+        description: "اشتراک ستاپ و اسمبل، بازخورد جامعه، ایده چیدمان، RGB و مدیریت کابل.",
+        order: 4,
+      },
+      {
+        title: "مانیتور و لوازم جانبی",
+        description: "انتخاب مانیتور، نرخ تازه‌سازی، کیبورد و موس گیمینگ، هدست و رابط‌های صوتی.",
+        order: 5,
+      },
+      {
+        title: "حافظه و ذخیره‌سازی",
+        description: "SSD NVMe، RAID، کلون OS، عیب‌یابی سرعت درایو و انتخاب ظرفیت برای بازی و کار.",
+        order: 6,
+      },
     ];
 
     for (const c of defaults) {
-      const existing = await this.categoriesRepo.findOne({ where: { title: c.title } });
+      let existing = await this.categoriesRepo.findOne({ where: { title: c.title } });
+      if (!existing && c.title === "مونتاژ کیس") {
+        const legacy = await this.categoriesRepo.findOne({ where: { title: "مونتاژ PC" } });
+        if (legacy) {
+          legacy.title = c.title;
+          existing = legacy;
+        }
+      }
       if (!existing) {
         await this.categoriesRepo.save(
           this.categoriesRepo.create({
@@ -111,6 +167,60 @@ export class SeedService {
       existing.order = c.order;
       if (existing.isActive !== true) existing.isActive = true;
       await this.categoriesRepo.save(existing);
+    }
+  }
+
+  /** Official FAQ threads authored by admin (idempotent via seed tag). */
+  async seedAdminFaqQa() {
+    const admin = await this.usersRepo.findOne({ where: { email: "admin@threadly.com" } });
+    if (!admin) return;
+
+    const existing = await this.threadsRepo
+      .createQueryBuilder("t")
+      .where("t.tags LIKE :tag", { tag: `%${ADMIN_FAQ_SEED_TAG}%` })
+      .getCount();
+    if (existing >= ADMIN_FAQ_ITEMS.length) return;
+
+    const activeCategories = await this.categoriesRepo.find({ where: { isActive: true } });
+    const defaultCategory = activeCategories.find((c) => c.title === "مونتاژ کیس")?.title ?? activeCategories[0]?.title ?? "مونتاژ کیس";
+
+    for (const item of ADMIN_FAQ_ITEMS) {
+      const duplicate = await this.threadsRepo.findOne({ where: { title: item.question } });
+      if (duplicate) continue;
+
+      const category = activeCategories.some((c) => c.title === item.category) ? item.category : defaultCategory;
+      const content = item.question;
+      const excerpt = content.length > 160 ? `${content.slice(0, 157)}...` : content;
+
+      const thread = await this.threadsRepo.save(
+        this.threadsRepo.create({
+          title: item.question,
+          content,
+          excerpt,
+          category,
+          tags: ["faq", "راهنما", ADMIN_FAQ_SEED_TAG],
+          status: "approved",
+          language: "fa",
+          author: admin,
+          approvedAt: new Date(),
+          rejectedAt: null,
+          repliesCount: 1,
+          viewsCount: 0,
+          likesCount: 0,
+        }),
+      );
+
+      const reply = await this.repliesRepo.save(
+        this.repliesRepo.create({
+          thread,
+          author: admin,
+          content: item.answer,
+          likesCount: 0,
+        }),
+      );
+
+      thread.bestReplyId = reply.id;
+      await this.threadsRepo.save(thread);
     }
   }
 

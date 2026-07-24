@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UsersService } from "./users.service";
 import { JwtAuthGuard } from "../auth/jwt.guard";
@@ -8,6 +8,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { join, extname } from "path";
 import { randomUUID } from "crypto";
+import { UpdateUserProfileDto } from "./dto";
 
 @ApiTags("users")
 @Controller("api/users")
@@ -33,7 +34,7 @@ export class UsersController {
             id: "uuid",
             name: "Alice",
             avatarUrl: null,
-            points: 42,
+            points: 26,
             rank: 1,
             breakdown: { threads: 2, comments: 6, reactions: 10 },
           },
@@ -46,6 +47,15 @@ export class UsersController {
     return this.users.leaderboard({ limit });
   }
 
+  @Patch("me/profile")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: UpdateUserProfileDto })
+  updateMyProfile(@Req() req: Request, @Body() dto: UpdateUserProfileDto) {
+    const user = req.user as { userId: string };
+    return this.users.updateMyProfile(user.userId, dto);
+  }
+
   @Get(":id/profile")
   @ApiResponse({
     status: 200,
@@ -54,7 +64,7 @@ export class UsersController {
         id: "uuid",
         name: "Alice",
         avatarUrl: null,
-        points: 42,
+        points: 26,
         rank: 1,
         breakdown: { threads: 2, comments: 6, reactions: 10 },
         totalUsers: 12,
@@ -74,7 +84,7 @@ export class UsersController {
           {
             id: "thread:uuid",
             type: "thread",
-            points: 10,
+            points: 2,
             createdAt: "2026-01-01T12:00:00.000Z",
             thread: { id: "uuid", title: "Hello" },
           },

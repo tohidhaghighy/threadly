@@ -9,6 +9,16 @@ import { AppQueryProvider } from "@/lib/query";
 import { AuthProvider } from "@/lib/auth";
 import { buildSeo } from "@/lib/seo";
 import { ForumTopBanner } from "@/components/ForumTopBanner";
+import { SiteSeoBlurb } from "@/components/SiteSeoBlurb";
+import { PhoneRequiredBanner } from "@/components/shared/profile/PhoneRequiredBanner";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
+
+const GTM_ID = "GTM-MZ6KVF7C";
+const GTM_HEAD_SCRIPT = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');`;
 
 function SiteFooter() {
   const { t } = useI18n();
@@ -58,7 +68,7 @@ function NotFoundComponent() {
 }
 
 const ROOT_DESCRIPTION =
-  "انجمن گفتگوی فاطر برای سازندگان PC: پرسش، اشتراک اسمبل و پاسخ از جامعهٔ کاربران فاطر.";
+  "انجمن گفتگوی فاطر برای سازندگان کیس: پرسش، اشتراک اسمبل و پاسخ از جامعهٔ کاربران فاطر.";
 
 export const Route = createRootRoute({
   head: () => {
@@ -74,15 +84,23 @@ export const Route = createRootRoute({
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         { name: "theme-color", content: "#f97316" },
-        { name: "color-scheme", content: "dark light" },
+        { name: "color-scheme", content: "light dark" },
         { name: "application-name", content: "انجمن فاطر" },
+        { name: "apple-mobile-web-app-title", content: "انجمن فاطر" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "mobile-web-app-capable", content: "yes" },
+        { name: "format-detection", content: "telephone=no" },
         { name: "google", content: "notranslate" },
         ...seo.meta,
       ],
       links: [
         { rel: "stylesheet", href: appCss },
-        { rel: "icon", href: "/favicon.svg" },
+        { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
         { rel: "shortcut icon", href: "/favicon.svg" },
+        { rel: "apple-touch-icon", href: "/favicon.svg" },
+        { rel: "manifest", href: "/site.webmanifest" },
+        { rel: "dns-prefetch", href: "https://www.googletagmanager.com" },
+        { rel: "preconnect", href: "https://www.googletagmanager.com" },
         ...seo.links,
       ],
     };
@@ -94,11 +112,26 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fa" dir="rtl" className="dark">
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
+        {/* Google Tag Manager */}
+        <script dangerouslySetInnerHTML={{ __html: GTM_HEAD_SCRIPT }} />
+        {/* End Google Tag Manager */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+            title="Google Tag Manager"
+          />
+        </noscript>
+        {/* End Google Tag Manager (noscript) */}
         {children}
         <Scripts />
       </body>
@@ -137,10 +170,12 @@ function RootComponent() {
                 <div className="sticky top-0 z-40 border-b border-border/60 bg-background/90 shadow-sm backdrop-blur-xl">
                   <ForumTopBanner />
                   <AppHeader />
+                  <PhoneRequiredBanner />
                 </div>
                 <main className="flex-1">
                   <Outlet />
                 </main>
+                <SiteSeoBlurb />
                 <SiteFooter />
               </div>
             </div>

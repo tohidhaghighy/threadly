@@ -554,7 +554,7 @@ describe("Threadly API (e2e)", () => {
         .expect(201)
     ).body.token as string;
 
-    // create thread by A and approve (10 pts)
+    // create thread by A and approve (2 pts)
     const t = await request(app.getHttpServer())
       .post("/api/threads")
       .set(bearer(aToken))
@@ -586,21 +586,21 @@ describe("Threadly API (e2e)", () => {
         .expect(201);
     }
 
-    // leaderboard: A should be above B (A=14, B=5)
+    // leaderboard: A should be above B (A=6, B=5)
     const lb = await request(app.getHttpServer()).get("/api/users/leaderboard?limit=10").expect(200);
     const items = lb.body.items as any[];
     const aRow = items.find((x) => x.id === aId);
     const bRow = items.find((x) => x.id === bId);
     expect(aRow).toBeTruthy();
     expect(bRow).toBeTruthy();
-    expect(aRow.points).toBe(14);
+    expect(aRow.points).toBe(6);
     expect(bRow.points).toBe(5);
     expect(aRow.rank).toBe(1);
     expect(bRow.rank).toBeGreaterThan(1);
 
     // profile
     const pA = await request(app.getHttpServer()).get(`/api/users/${aId}/profile`).expect(200);
-    expect(pA.body.points).toBe(14);
+    expect(pA.body.points).toBe(6);
     expect(pA.body.rank).toBe(1);
     expect(pA.body.breakdown.threads).toBe(1);
     expect(pA.body.breakdown.comments).toBe(2);
@@ -893,6 +893,40 @@ describe("Threadly API (e2e)", () => {
     await request(app.getHttpServer()).delete(`/api/admin/categories/${catId}`).set(bearer(adminToken)).expect(200);
     const listAfter = await request(app.getHttpServer()).get("/api/admin/categories").set(bearer(adminToken)).expect(200);
     expect(listAfter.body.items.some((c: any) => c.id === catId)).toBe(false);
+  });
+
+  it("user profile contact: update phone, shaba, card, birthdate", async () => {
+    const email = `contact-${Date.now()}@example.com`;
+    const reg = await request(app.getHttpServer())
+      .post("/api/auth/register")
+      .send({ name: "Contact User", email, password: "secret123" })
+      .expect(201);
+
+    const token = reg.body.token as string;
+    const userId = reg.body.user.id as string;
+
+    const updated = await request(app.getHttpServer())
+      .patch("/api/users/me/profile")
+      .set(bearer(token))
+      .send({
+        phone: "09121234567",
+        bankShaba: "IR120170000000100000000001",
+        cardNumber: "6037991234567890",
+        birthDate: "1995-06-01",
+      })
+      .expect(200);
+
+    expect(updated.body.phone).toBe("09121234567");
+    expect(updated.body.bankShaba).toBe("IR120170000000100000000001");
+    expect(updated.body.cardNumber).toBe("6037991234567890");
+    expect(updated.body.birthDate).toBe("1995-06-01");
+
+    const me = await request(app.getHttpServer()).get("/api/auth/me").set(bearer(token)).expect(200);
+    expect(me.body.phone).toBe("09121234567");
+    expect(me.body.id).toBe(userId);
+
+    const publicProfile = await request(app.getHttpServer()).get(`/api/users/${userId}/profile`).expect(200);
+    expect(publicProfile.body.phone).toBeUndefined();
   });
 });
 

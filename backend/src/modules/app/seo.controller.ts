@@ -5,6 +5,8 @@ import { type Request } from "express";
 import { Repository } from "typeorm";
 
 import { ThreadEntity, type ThreadStatus } from "../../persistence/entities/thread.entity";
+import { CategoryEntity } from "../../persistence/entities/category.entity";
+import { UserEntity } from "../../persistence/entities/user.entity";
 
 /**
  * Public SEO assets that are easier to generate at the API layer than as static
@@ -15,6 +17,8 @@ import { ThreadEntity, type ThreadStatus } from "../../persistence/entities/thre
 export class SeoController {
   constructor(
     @InjectRepository(ThreadEntity) private readonly threadsRepo: Repository<ThreadEntity>,
+    @InjectRepository(CategoryEntity) private readonly categoriesRepo: Repository<CategoryEntity>,
+    @InjectRepository(UserEntity) private readonly usersRepo: Repository<UserEntity>,
   ) {}
 
   @Get("sitemap.xml")
@@ -23,14 +27,28 @@ export class SeoController {
   async sitemap(@Req() req: RawBodyRequest<Request>): Promise<string> {
     const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
     const host = (req.headers["x-forwarded-host"] as string) || req.headers.host || "";
-    const origin = host ? `${protocol}://${host}` : "";
+    const envOrigin = (process.env.PUBLIC_SITE_URL || process.env.VITE_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+    const origin = host ? `${protocol}://${host}` : envOrigin || "https://threadly.app";
 
-    const threads = await this.threadsRepo.find({
-      where: { status: "approved" satisfies ThreadStatus },
-      select: ["id", "updatedAt"],
-      order: { updatedAt: "DESC" },
-      take: 5000,
-    });
+    const [threads, categories, users] = await Promise.all([
+      this.threadsRepo.find({
+        where: { status: "approved" satisfies ThreadStatus },
+        select: ["id", "updatedAt"],
+        order: { updatedAt: "DESC" },
+        take: 5000,
+      }),
+      this.categoriesRepo.find({
+        where: { isActive: true },
+        select: ["title", "updatedAt"],
+        order: { order: "ASC" },
+      }),
+      this.usersRepo.find({
+        where: { status: "active" },
+        select: ["id", "updatedAt"],
+        order: { createdAt: "ASC" },
+        take: 1000,
+      }),
+    ]);
 
     const staticUrls = [
       { loc: "/", priority: "1.0", changefreq: "hourly" },
@@ -40,8 +58,19 @@ export class SeoController {
 
     const urlEntries = [
       ...staticUrls.map((u) => xmlUrl(`${origin}${u.loc}`, undefined, u.changefreq, u.priority)),
+      ...categories.map((c) =>
+        xmlUrl(
+          `${origin}/threads?category=${encodeURIComponent(c.title)}`,
+          c.updatedAt?.toISOString(),
+          "daily",
+          "0.7",
+        ),
+      ),
       ...threads.map((t) =>
         xmlUrl(`${origin}/threads/${t.id}`, t.updatedAt?.toISOString(), "weekly", "0.8"),
+      ),
+      ...users.map((u) =>
+        xmlUrl(`${origin}/users/${u.id}`, u.updatedAt?.toISOString(), "weekly", "0.4"),
       ),
     ].join("\n");
 

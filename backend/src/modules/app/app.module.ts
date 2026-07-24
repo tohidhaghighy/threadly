@@ -10,6 +10,7 @@ import { RepliesModule } from "../replies/replies.module";
 import { AdminModule } from "../admin/admin.module";
 import { UsersModule } from "../users/users.module";
 import { CategoriesModule } from "../categories/categories.module";
+import { PageSeoModule } from "../seo/page-seo.module";
 
 import { UserEntity } from "../../persistence/entities/user.entity";
 import { ThreadEntity } from "../../persistence/entities/thread.entity";
@@ -21,6 +22,7 @@ import { CategoryEntity } from "../../persistence/entities/category.entity";
 import { ThreadLikeEntity } from "../../persistence/entities/thread-like.entity";
 import { ThreadViewEntity } from "../../persistence/entities/thread-view.entity";
 import { ReplyAttachmentEntity } from "../../persistence/entities/reply-attachment.entity";
+import { PageSeoEntity } from "../../persistence/entities/page-seo.entity";
 import { SeedService } from "./seed.service";
 import { StatsController } from "./stats.controller";
 import { SeoController } from "./seo.controller";
@@ -48,6 +50,7 @@ import { SeoController } from "./seo.controller";
           CategoryEntity,
           ThreadLikeEntity,
           ThreadViewEntity,
+          PageSeoEntity,
         ],
         synchronize: true,
         logging: false,
@@ -60,6 +63,7 @@ import { SeoController } from "./seo.controller";
     CategoriesModule,
     RepliesModule,
     AdminModule,
+    PageSeoModule,
   ],
   controllers: [StatsController, SeoController],
   providers: [SeedService],
@@ -70,8 +74,11 @@ export class AppModule {
   async onModuleInit() {
     await this.seed.seedAdmin();
     await this.seed.seedCategories();
-    await this.seed.seedHardwareAssemblyQa();
-    await this.seed.dedupeThreadContents();
+    await this.seed.seedAdminFaqQa();
+    if (process.env.SEED_DEMO_DATA === "true") {
+      await this.seed.seedHardwareAssemblyQa();
+      await this.seed.dedupeThreadContents();
+    }
     this.seed.seedAvatarSamples();
   }
 }

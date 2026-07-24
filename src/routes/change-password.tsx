@@ -14,6 +14,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { buildSeo } from "@/lib/seo";
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
 
 const schema = z
   .object({
@@ -42,6 +43,12 @@ export const Route = createFileRoute("/change-password")({
 });
 
 function ChangePasswordPage() {
+  useStaticPageSeo(PAGE_SEO_KEYS.changePassword, {
+    title: "تغییر رمز عبور",
+    description: "تغییر رمز عبور حساب کاربری در انجمن فاطر.",
+    path: "/change-password",
+    noindex: true,
+  });
   const auth = useAuth();
   const navigate = useNavigate();
   const { t } = useI18n();

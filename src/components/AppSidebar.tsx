@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, MessageSquare, PlusCircle, ShieldCheck, Users, Settings, Cpu, Tags, HelpCircle, MessageSquareText } from "lucide-react";
+import { Globe, Home, MessageSquare, PlusCircle, ShieldCheck, Users, Settings, Cpu, Tags, HelpCircle, MessageSquareText } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -108,6 +108,7 @@ export function AppSidebar() {
                 {[
                   { title: t("nav.admin"), url: "/admin", icon: ShieldCheck },
                   { title: "دسته‌بندی‌ها", url: "/admin/categories", icon: Tags },
+                  { title: "SEO صفحات", url: "/admin/seo", icon: Globe },
                   { title: "کامنت‌ها", url: "/admin/comments", icon: MessageSquareText },
                   { title: t("nav.settings"), url: "/admin", icon: Settings },
                 ].map((item) => (

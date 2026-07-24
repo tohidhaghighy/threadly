@@ -9,8 +9,11 @@ export class CategoryEntity {
   @Column({ type: "varchar", length: 80 })
   title!: string;
 
-  @Column({ type: "varchar", length: 240, nullable: true })
+  @Column({ type: "varchar", length: 512, nullable: true })
   description!: string | null;
+
+  @Column({ type: "simple-json", default: "[]" })
+  seoKeywords!: string[];
 
   @Column({ type: "int", default: 0 })
   order!: number;

@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import {
   Award,
   ArrowRight,
@@ -18,7 +17,6 @@ import {
   Lock,
   CheckCircle2,
 } from "lucide-react";
-import { api, type UserPointsEvent, type UserProfile } from "@/lib/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,17 +26,19 @@ import { Link } from "@tanstack/react-router";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/lib/auth";
 import { buildSeo, useSeo } from "@/lib/seo";
+import { buildBreadcrumbJsonLd } from "@/lib/seo-schema";
 import { achievementsFromProfile, activityStreakFromEvents, levelFromPoints } from "@/lib/gamification";
+import { useUserPointsEvents, useUserProfile } from "@/hooks/api";
 
 export const Route = createFileRoute("/users/$id")({
   head: ({ params }) => {
     const seo = buildSeo({
       title: "پروفایل کاربر",
-      description: "پروفایل کاربر و امتیاز فعالیت.",
+      description: "پروفایل کاربر و امتیاز فعالیت در انجمن فاطر.",
       path: `/users/${params.id}`,
       type: "profile",
     });
-    return { meta: seo.meta, links: seo.links };
+    return { meta: seo.meta, links: seo.links, scripts: seo.scripts };
   },
   component: UserProfilePage,
 });
@@ -47,15 +47,8 @@ function UserProfilePage() {
   const { id } = Route.useParams();
   const auth = useAuth();
 
-  const q = useQuery({
-    queryKey: ["userProfile", id],
-    queryFn: () => api<UserProfile>(`/api/users/${id}/profile`),
-  });
-
-  const eventsQ = useQuery({
-    queryKey: ["userPointsEvents", id],
-    queryFn: () => api<{ items: UserPointsEvent[]; nextCursor: string | null }>(`/api/users/${id}/points-events?limit=200`),
-  });
+  const q = useUserProfile(id);
+  const eventsQ = useUserPointsEvents(id, 200);
 
   const u = q.data;
   const events = eventsQ.data?.items ?? [];
@@ -66,24 +59,41 @@ function UserProfilePage() {
   const unlockedAchievements = achievements.filter((a) => a.unlocked).length;
 
   useSeo(
-    u
+    q.isError
       ? {
-          title: `${u.name} — پروفایل کاربر`,
-          description: `پروفایل ${u.name} در انجمن فاطر • امتیاز ${u.points} • رتبه ${u.rank} از ${u.totalUsers} • ${u.breakdown.threads} موضوع، ${u.breakdown.comments} کامنت، ${u.breakdown.reactions} واکنش.`,
+          title: "پروفایل پیدا نشد",
+          description: "این کاربر وجود ندارد.",
           path: `/users/${id}`,
-          type: "profile",
-          image: u.avatarUrl ?? undefined,
-          jsonLd: {
-            "@context": "https://schema.org",
-            "@type": "ProfilePage",
-            mainEntity: {
-              "@type": "Person",
-              name: u.name,
-              image: u.avatarUrl ?? undefined,
-            },
-          },
+          noindex: true,
         }
-      : null,
+      : u
+        ? {
+            title: `${u.name} — پروفایل کاربر`,
+            description: `پروفایل ${u.name} در انجمن فاطر • امتیاز ${u.points} • رتبه ${u.rank} از ${u.totalUsers} • ${u.breakdown.threads} موضوع، ${u.breakdown.comments} کامنت، ${u.breakdown.reactions} واکنش.`,
+            path: `/users/${id}`,
+            type: "profile",
+            image: u.avatarUrl ?? undefined,
+            imageAlt: u.name,
+            author: u.name,
+            jsonLd: [
+              {
+                "@context": "https://schema.org",
+                "@type": "ProfilePage",
+                mainEntity: {
+                  "@type": "Person",
+                  name: u.name,
+                  image: u.avatarUrl ?? undefined,
+                  url: undefined,
+                },
+              },
+              buildBreadcrumbJsonLd([
+                { name: "خانه", path: "/" },
+                { name: "کاربران", path: "/users" },
+                { name: u.name, path: `/users/${id}` },
+              ]),
+            ],
+          }
+        : null,
   );
 
   if (q.isError) {
@@ -160,7 +170,7 @@ function UserProfilePage() {
                 </Button>
                 {isMyProfile ? (
                   <Button asChild variant="hero" size="sm">
-                    <Link to="/settings">ویرایش عکس</Link>
+                    <Link to="/settings">ویرایش پروفایل</Link>
                   </Button>
                 ) : null}
               </div>
@@ -203,7 +213,7 @@ function UserProfilePage() {
           )}
 
           <div className="mt-6 rounded-xl border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
-            امتیاز: موضوع × ۱۰، کامنت × ۲، واکنش × ۱ (فقط فعالیت روی موضوعات تأیید شده محاسبه می‌شود)
+            امتیاز: موضوع × ۲، کامنت × ۲، واکنش × ۱ (فقط فعالیت روی موضوعات تأیید شده محاسبه می‌شود)
           </div>
 
           <div className="mt-4 rounded-xl border border-border/60 bg-card p-4 shadow-card">
@@ -218,9 +228,9 @@ function UserProfilePage() {
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <EarnCard title="ایجاد موضوع" points="+۱۰" desc="هر موضوع تأیید شده ۱۰ امتیاز دارد." />
-              <EarnCard title="ارسال کامنت" points="+۲" desc="هر کامنت روی موضوعات تأیید شده ۲ امتیاز دارد." />
-              <EarnCard title="ثبت واکنش" points="+۱" desc="هر واکنش روی کامنت‌های موضوعات تأیید شده ۱ امتیاز دارد." />
+              <EarnCard title="ایجاد موضوع" points="+۲" desc="هر موضوع تأیید شده ۲ امتیاز دارد." />
+              <EarnCard title="ارسال پاسخ" points="+۲" desc="هر پاسخ روی موضوعات تأیید شده ۲ امتیاز دارد." />
+              <EarnCard title="ثبت واکنش" points="+۱" desc="هر واکنش روی پاسخ‌های موضوعات تأیید شده ۱ امتیاز دارد." />
             </div>
           </div>
 

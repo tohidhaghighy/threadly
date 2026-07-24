@@ -41,7 +41,13 @@ export type AuthUser = {
   role: "user" | "admin";
   status: "active" | "banned";
   avatarUrl: string | null;
+  phone: string | null;
+  bankShaba: string | null;
+  cardNumber: string | null;
+  birthDate: string | null;
 };
+
+export type UserProfileContact = Pick<AuthUser, "phone" | "bankShaba" | "cardNumber" | "birthDate">;
 
 export type UserActivityBreakdown = { threads: number; comments: number; reactions: number };
 
@@ -68,7 +74,7 @@ export type UserPointsEvent =
   | {
       id: string;
       type: "thread";
-      points: 10;
+      points: 2;
       createdAt: string;
       thread: { id: string; title: string };
     }
@@ -163,6 +169,7 @@ export type CategoryPublicItem = {
   id: string;
   title: string;
   description: string | null;
+  seoKeywords: string[];
   order: number;
   isActive: boolean;
   threadsCount: number;

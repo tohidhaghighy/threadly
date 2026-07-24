@@ -2,9 +2,18 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { UserEntity, type UserRole, type UserStatus } from "../../persistence/entities/user.entity";
+import {
+  normalizeBankShaba,
+  normalizeBirthDate,
+  normalizeCardNumber,
+  normalizeIranPhone,
+  profileContactDto,
+} from "../../common/profile-fields.util";
+import type { UpdateUserProfileDto } from "./dto";
 import { ThreadEntity } from "../../persistence/entities/thread.entity";
 import { ReplyEntity } from "../../persistence/entities/reply.entity";
 import { ReplyReactionEntity } from "../../persistence/entities/reply-reaction.entity";
+import { POINTS, PHONE_REQUIRED_MIN_POINTS, scoreFromCounts } from "../../common/points.constants";
 
 @Injectable()
 export class UsersService {
@@ -58,7 +67,7 @@ export class UsersService {
   }
 
   private scoreOf(counts: { threads: number; comments: number; reactions: number }) {
-    return counts.threads * 10 + counts.comments * 2 + counts.reactions * 1;
+    return scoreFromCounts(counts);
   }
 
   private async activityCountsByUserId(): Promise<Map<string, { threads: number; comments: number; reactions: number }>> {
@@ -221,14 +230,14 @@ export class UsersService {
       ...threads.map((t) => ({
         id: `thread:${t.id}`,
         type: "thread" as const,
-        points: 10,
+        points: POINTS.thread,
         createdAt: new Date(t.createdAt).toISOString(),
         thread: { id: t.id, title: t.title },
       })),
       ...replies.map((r) => ({
         id: `reply:${r.id}`,
         type: "reply" as const,
-        points: 2,
+        points: POINTS.reply,
         createdAt: new Date(r.createdAt).toISOString(),
         thread: { id: r.threadId, title: r.threadTitle },
         reply: { id: r.id, excerpt: (r.content ?? "").slice(0, 140) },
@@ -236,7 +245,7 @@ export class UsersService {
       ...reactions.map((rr) => ({
         id: `reaction:${rr.id}`,
         type: "reaction" as const,
-        points: 1,
+        points: POINTS.reaction,
         createdAt: new Date(rr.createdAt).toISOString(),
         emoji: rr.emoji,
         thread: { id: rr.threadId, title: rr.threadTitle },
@@ -373,6 +382,26 @@ export class UsersService {
 
     const saved = await this.usersRepo.save(user);
     return { avatarUrl: saved.avatarUrl };
+  }
+
+  async updateMyProfile(userId: string, dto: UpdateUserProfileDto) {
+    const user = await this.findById(userId);
+
+    if (dto.phone !== undefined) user.phone = normalizeIranPhone(dto.phone);
+    if (dto.bankShaba !== undefined) user.bankShaba = normalizeBankShaba(dto.bankShaba);
+    if (dto.cardNumber !== undefined) user.cardNumber = normalizeCardNumber(dto.cardNumber);
+    if (dto.birthDate !== undefined) user.birthDate = normalizeBirthDate(dto.birthDate);
+
+    const counts = await this.activityCountsByUserId();
+    const points = this.scoreOf(counts.get(userId) ?? { threads: 0, comments: 0, reactions: 0 });
+    if (points >= PHONE_REQUIRED_MIN_POINTS && !user.phone) {
+      throw new BadRequestException(
+        "از سطح ۴ به بعد، شماره موبایل الزامی است تا پشتیبانی بتواند برای جوایز یا تماس با شما ارتباط بگیرد.",
+      );
+    }
+
+    const saved = await this.usersRepo.save(user);
+    return profileContactDto(saved);
   }
 }
 

@@ -17,11 +17,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { applyTheme, readStoredTheme, storeTheme, type ThemeMode } from "@/lib/theme";
 
 export function AppHeader() {
-  const [dark, setDark] = useState(true);
+  const [theme, setTheme] = useState<ThemeMode>(() =>
+    typeof window === "undefined" ? "light" : readStoredTheme(),
+  );
   const { t } = useI18n();
   const auth = useAuth();
+  const dark = theme === "dark";
   const seenStorageKey = auth.user ? `threadly_alerts_seen_at_${auth.user.id}` : "threadly_alerts_seen_at_guest";
   const [alertsSeenAt, setAlertsSeenAt] = useState<number>(() => {
     try {
@@ -71,15 +75,21 @@ export function AppHeader() {
   };
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
+    applyTheme(theme);
+    storeTheme(theme);
+  }, [theme]);
 
   return (
     <header className="flex h-16 items-center gap-3 border-t border-border/50 bg-background/80 px-3 backdrop-blur-xl md:px-6">
       <SidebarTrigger />
 
       <div className="flex items-center gap-1 ms-auto">
-        <Button variant="ghost" size="icon" onClick={() => setDark((d) => !d)} aria-label={t("header.toggleTheme")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+          aria-label={t("header.toggleTheme")}
+        >
           {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
 

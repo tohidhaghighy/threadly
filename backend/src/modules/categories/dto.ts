@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from "class-validator";
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from "class-validator";
 
 export class CreateCategoryDto {
   @ApiProperty({ example: "کارت گرافیک" })
@@ -11,8 +11,14 @@ export class CreateCategoryDto {
   @ApiProperty({ example: "بحث درباره GPU و درایورها", required: false })
   @IsOptional()
   @IsString()
-  @MaxLength(240)
+  @MaxLength(512)
   description?: string;
+
+  @ApiProperty({ example: ["GPU", "مونتاژ"], required: false, type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  seoKeywords?: string[];
 
   @ApiProperty({ example: 10, required: false })
   @IsOptional()
@@ -37,8 +43,14 @@ export class UpdateCategoryDto {
   @ApiProperty({ example: "بحث درباره GPU و درایورها", required: false })
   @IsOptional()
   @IsString()
-  @MaxLength(240)
+  @MaxLength(512)
   description?: string;
+
+  @ApiProperty({ example: ["GPU", "مونتاژ"], required: false, type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  seoKeywords?: string[];
 
   @ApiProperty({ example: 10, required: false })
   @IsOptional()

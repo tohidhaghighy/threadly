@@ -1,14 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { Crown, Trophy } from "lucide-react";
-import { api, type UserLeaderboardItem } from "@/lib/api";
 import { levelFromPoints } from "@/lib/gamification";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { buildSeo } from "@/lib/seo";
-
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
+import { useUsersLeaderboard } from "@/hooks/api";
 export const Route = createFileRoute("/users/")({
   head: () => {
     const seo = buildSeo({
@@ -22,11 +21,12 @@ export const Route = createFileRoute("/users/")({
 });
 
 function UsersLeaderboardPage() {
-  const q = useQuery({
-    queryKey: ["usersLeaderboard"],
-    queryFn: () => api<{ items: UserLeaderboardItem[]; nextCursor: string | null }>(`/api/users/leaderboard?limit=100`),
+  useStaticPageSeo(PAGE_SEO_KEYS.users, {
+    title: "رتبه‌بندی کاربران",
+    description: "رتبه‌بندی کاربران بر اساس فعالیت: موضوع، کامنت و واکنش.",
+    path: "/users",
   });
-
+  const q = useUsersLeaderboard();
   const items = q.data?.items ?? [];
 
   const RankCell = ({ rank }: { rank: number }) => {
@@ -57,7 +57,7 @@ function UsersLeaderboardPage() {
         </div>
         <div>
           <h1 className="text-3xl font-extrabold">رتبه‌بندی کاربران</h1>
-          <p className="text-sm text-muted-foreground">امتیاز: موضوع × ۱۰، کامنت × ۲، واکنش × ۱</p>
+          <p className="text-sm text-muted-foreground">امتیاز: موضوع × ۲، کامنت × ۲، واکنش × ۱</p>
         </div>
       </div>
 

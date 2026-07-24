@@ -1,14 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, MessageSquareText, Pencil, Trash2, ArrowRight } from "lucide-react";
-import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/shared/rich-text";
+import { stripHtmlToText } from "@/lib/sanitize-html";
 import { toast } from "sonner";
+import { useAdminReplies, useDeleteAdminReply, useUpdateAdminReply } from "@/hooks/api";
+import type { AdminReplyItem } from "@/api/replies";
 import {
   Table,
   TableBody,
@@ -26,14 +27,6 @@ import {
 } from "@/components/ui/dialog";
 import { buildSeo } from "@/lib/seo";
 
-type AdminReplyItem = {
-  id: string;
-  content: string;
-  createdAt: string;
-  author: { id: string; displayName: string };
-  thread: { id: string; title: string };
-};
-
 export const Route = createFileRoute("/admin/comments")({
   head: () => {
     const seo = buildSeo({
@@ -49,7 +42,6 @@ export const Route = createFileRoute("/admin/comments")({
 
 function AdminCommentsPage() {
   const auth = useAuth();
-  const qc = useQueryClient();
 
   const [threadQ, setThreadQ] = useState("");
   const [q, setQ] = useState("");
@@ -57,50 +49,11 @@ function AdminCommentsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
 
-  const repliesQuery = useQuery({
-    queryKey: ["adminReplies", threadQ.trim(), q.trim()],
-    queryFn: async () => {
-      const qs = new URLSearchParams();
-      if (threadQ.trim()) qs.set("threadQ", threadQ.trim());
-      if (q.trim()) qs.set("q", q.trim());
-      return api<{ items: AdminReplyItem[]; nextCursor: string | null }>(`/api/admin/replies?${qs.toString()}`, {
-        auth: true,
-      });
-    },
-    enabled: auth.isAdmin,
-  });
+  const repliesQuery = useAdminReplies(threadQ, q, auth.isAdmin);
+  const updateMut = useUpdateAdminReply();
+  const deleteMut = useDeleteAdminReply();
 
   const items = useMemo(() => repliesQuery.data?.items ?? [], [repliesQuery.data?.items]);
-
-  const updateMut = useMutation({
-    mutationFn: async () => {
-      if (!editId) throw new Error("no reply");
-      return api<{ id: string; content: string }>(`/api/admin/replies/${editId}`, {
-        method: "PATCH",
-        auth: true,
-        body: JSON.stringify({ content: editContent }),
-      });
-    },
-    onSuccess: async () => {
-      toast.success("کامنت ذخیره شد");
-      setEditOpen(false);
-      setEditId(null);
-      await qc.invalidateQueries({ queryKey: ["adminReplies"] });
-    },
-    onError: () => toast.error("ذخیره کامنت ناموفق بود"),
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: async (id: string) =>
-      api<{ ok: true }>(`/api/admin/replies/${id}`, { method: "DELETE", auth: true }),
-    onSuccess: async () => {
-      toast.success("کامنت حذف شد");
-      await qc.invalidateQueries({ queryKey: ["adminReplies"] });
-      await qc.invalidateQueries({ queryKey: ["replies"] });
-      await qc.invalidateQueries({ queryKey: ["thread"] });
-    },
-    onError: () => toast.error("حذف کامنت ناموفق بود"),
-  });
 
   if (!auth.isAdmin) {
     return (
@@ -176,7 +129,7 @@ function AdminCommentsPage() {
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{r.author.displayName}</TableCell>
                 <TableCell className="max-w-md">
-                  <div className="line-clamp-2 text-sm">{r.content}</div>
+                  <div className="line-clamp-2 text-sm">{stripHtmlToText(r.content)}</div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {new Date(r.createdAt).toLocaleString("fa-IR")}
@@ -201,7 +154,10 @@ function AdminCommentsPage() {
                       onClick={() => {
                         const ok = window.confirm("کامنت حذف شود؟ این کار قابل بازگشت نیست.");
                         if (!ok) return;
-                        deleteMut.mutate(r.id);
+                        deleteMut.mutate(r.id, {
+                          onSuccess: () => toast.success("کامنت حذف شد"),
+                          onError: () => toast.error("حذف کامنت ناموفق بود"),
+                        });
                       }}
                     >
                       <Trash2 className="h-4 w-4" /> حذف
@@ -234,11 +190,12 @@ function AdminCommentsPage() {
           <DialogHeader>
             <DialogTitle>ویرایش کامنت</DialogTitle>
           </DialogHeader>
-          <Textarea
+          <RichTextEditor
             value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            className="min-h-40"
-            placeholder="متن کامنت…"
+            onChange={setEditContent}
+            minHeightClassName="min-h-48"
+            placeholder="متن کامنت را ویرایش کنید…"
+            variant="user"
           />
           <DialogFooter className="gap-2 sm:justify-between">
             <Button variant="outline" type="button" onClick={() => setEditOpen(false)}>
@@ -247,8 +204,21 @@ function AdminCommentsPage() {
             <Button
               variant="hero"
               type="button"
-              disabled={updateMut.isPending || !editId || !editContent.trim()}
-              onClick={() => updateMut.mutate()}
+              disabled={updateMut.isPending || !editId || !stripHtmlToText(editContent)}
+              onClick={() => {
+                if (!editId) return;
+                updateMut.mutate(
+                  { id: editId, content: editContent },
+                  {
+                    onSuccess: () => {
+                      toast.success("کامنت ذخیره شد");
+                      setEditOpen(false);
+                      setEditId(null);
+                    },
+                    onError: () => toast.error("ذخیره کامنت ناموفق بود"),
+                  },
+                );
+              }}
             >
               ذخیره
             </Button>

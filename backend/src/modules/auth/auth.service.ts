@@ -66,7 +66,18 @@ export class AuthService {
   }
 
   publicUser(user: UserEntity) {
-    return { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status, avatarUrl: user.avatarUrl };
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      avatarUrl: user.avatarUrl,
+      phone: user.phone ?? null,
+      bankShaba: user.bankShaba ?? null,
+      cardNumber: user.cardNumber ?? null,
+      birthDate: user.birthDate ?? null,
+    };
   }
 }
 
