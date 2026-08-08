@@ -105,13 +105,13 @@ function NewTopic() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold">{t("new.title")}</h1>
+    <div className="mx-auto w-full max-w-4xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-extrabold sm:text-3xl">{t("new.title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("new.subtitle")}</p>
         </div>
-        <Badge variant="outline" className="border-warning/40 text-warning">
+        <Badge variant="outline" className="w-fit shrink-0 border-warning/40 text-warning">
           <CheckCircle2 className="me-1 h-3 w-3" /> {t("new.requiresApproval")}
         </Badge>
       </div>
@@ -158,7 +158,7 @@ function NewTopic() {
             else toast.error(e?.message ?? t("new.errorSubmitFailed"));
           }
         }}
-        className="mt-8 space-y-6 rounded-2xl border border-border/60 bg-card p-6 shadow-card md:p-8"
+        className="mt-8 space-y-6 rounded-2xl border border-border/60 bg-card p-4 shadow-card sm:p-6 md:p-8"
       >
         <div className="grid gap-2">
           <Label htmlFor="title" className="text-sm font-semibold">{t("new.field.title")}</Label>

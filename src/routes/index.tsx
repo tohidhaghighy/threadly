@@ -150,8 +150,8 @@ function Index() {
   }, [search]);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
-      <AnimatedSection className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-8 shadow-card md:p-12">
+    <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
+      <AnimatedSection className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-card sm:rounded-3xl sm:p-8 md:p-12">
         <div className="absolute inset-0 bg-gradient-primary opacity-10" />
         <div className="absolute -end-20 -top-20 h-72 w-72 rounded-full bg-primary/30 blur-3xl" />
         <div className="relative">
@@ -176,14 +176,17 @@ function Index() {
               <Badge className="bg-primary/20 text-primary border border-primary/30">
                 <Sparkles className="me-1 h-3 w-3" /> {t("home.badge")}
               </Badge>
-              <h1 className="mt-4 text-3xl font-extrabold leading-tight md:text-5xl">{t("home.title")}</h1>
-              <p className="mt-3 max-w-2xl text-base text-muted-foreground md:text-lg">{t("home.subtitle")}</p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild variant="hero" size="lg">
+              <h1 className="mt-4 text-2xl font-extrabold leading-tight sm:text-3xl md:text-5xl">{t("home.title")}</h1>
+              <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base md:text-lg">{t("home.subtitle")}</p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Button asChild variant="hero" size="lg" className="w-full sm:w-auto">
                   <Link to="/new">ثبت سؤال</Link>
                 </Button>
-                <Button asChild variant="glow" size="lg">
+                <Button asChild variant="glow" size="lg" className="w-full sm:w-auto">
                   <Link to="/threads">مرور گفتگوها</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="w-full sm:hidden">
+                  <Link to="/install">نصب اپلیکیشن</Link>
                 </Button>
               </div>
 
@@ -325,17 +328,17 @@ function Index() {
       </AnimatedSection>
 
       <AnimatedSection className="mt-12">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
               <TrendingUp className="h-5 w-5" />
             </div>
-            <div>
-              <h2 className="text-2xl font-extrabold">موضوعات</h2>
+            <div className="min-w-0">
+              <h2 className="text-xl font-extrabold sm:text-2xl">موضوعات</h2>
               <p className="text-sm text-muted-foreground">جدیدترین‌ها و محبوب‌ترین‌ها</p>
             </div>
           </div>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
             <Link to="/threads">
               <Filter className="h-4 w-4" />
               مشاهده همه
@@ -343,13 +346,21 @@ function Index() {
           </Button>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border/60 bg-card p-5 shadow-card">
+        <div className="mt-6 rounded-2xl border border-border/60 bg-card p-3 shadow-card sm:p-5">
           <Tabs defaultValue="newest" dir="rtl">
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="newest">جدیدترین</TabsTrigger>
-              <TabsTrigger value="mostReplied">بیشترین پاسخ</TabsTrigger>
-              <TabsTrigger value="mostViewed">پربازدیدترین</TabsTrigger>
-              <TabsTrigger value="hot">داغ</TabsTrigger>
+            <TabsList className="w-full">
+              <TabsTrigger value="newest" className="flex-1 sm:flex-none">
+                جدیدترین
+              </TabsTrigger>
+              <TabsTrigger value="mostReplied" className="flex-1 sm:flex-none">
+                بیشترین پاسخ
+              </TabsTrigger>
+              <TabsTrigger value="mostViewed" className="flex-1 sm:flex-none">
+                پربازدیدترین
+              </TabsTrigger>
+              <TabsTrigger value="hot" className="flex-1 sm:flex-none">
+                داغ
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="newest">

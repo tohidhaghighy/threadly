@@ -98,7 +98,7 @@ function UserProfilePage() {
 
   if (q.isError) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
+      <div className="mx-auto w-full max-w-4xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
         <Link
           to="/users"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -116,7 +116,7 @@ function UserProfilePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-4xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       <Link
         to="/users"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -125,7 +125,7 @@ function UserProfilePage() {
       </Link>
 
       <div className="mt-4 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-card">
-        <div className="border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-6">
+        <div className="border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-4 sm:p-6">
           {q.isLoading || !u ? (
             <div className="flex items-center gap-4">
               <Skeleton className="h-14 w-14 rounded-full" />
@@ -286,71 +286,119 @@ function UserProfilePage() {
           )}
 
           <div className="mt-6 overflow-hidden rounded-xl border border-border/60 bg-card shadow-card">
-            <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-muted/20 p-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+            <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-muted/20 p-3 sm:p-4">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
                   <Sparkles className="h-5 w-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-extrabold">تاریخچه فعالیت‌ها (امتیازها)</p>
                   <p className="text-xs text-muted-foreground">لیست کارهایی که باعث گرفتن امتیاز شده</p>
                 </div>
               </div>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="shrink-0 text-xs">
                 {eventsQ.isLoading ? "..." : `${events.length.toLocaleString("fa-IR")} مورد`}
               </Badge>
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="text-start">زمان</TableHead>
-                  <TableHead className="text-start">عمل</TableHead>
-                  <TableHead className="text-start">موضوع</TableHead>
-                  <TableHead className="text-start">امتیاز</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {eventsQ.isLoading
-                  ? Array.from({ length: 6 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-56" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                      </TableRow>
-                    ))
-                  : events.map((e) => (
-                      <TableRow key={e.id} className="hover:bg-muted/30">
-                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                          {new Date(e.createdAt).toLocaleString("fa-IR")}
-                        </TableCell>
-                        <TableCell>
-                          <ActionBadge e={e} />
-                        </TableCell>
-                        <TableCell className="max-w-[28rem]">
-                          {"thread" in e ? (
-                            <Link
-                              to="/threads/$id"
-                              params={{ id: e.thread.id }}
-                              className="line-clamp-1 text-sm font-semibold hover:underline"
-                            >
-                              {e.thread.title}
-                            </Link>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">—</span>
-                          )}
-                          {e.type === "reply" ? (
-                            <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{e.reply.excerpt}</p>
-                          ) : null}
-                        </TableCell>
-                        <TableCell className="font-extrabold text-primary">
+            <div className="space-y-2 p-3 md:hidden">
+              {eventsQ.isLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="rounded-xl border border-border/50 bg-muted/20 p-3">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="mt-2 h-4 w-40" />
+                      <Skeleton className="mt-2 h-3 w-full" />
+                    </div>
+                  ))
+                : events.map((e) => (
+                    <div key={e.id} className="rounded-xl border border-border/50 bg-muted/10 p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <ActionBadge e={e} />
+                        <span className="shrink-0 text-sm font-extrabold text-primary">
                           +{e.points.toLocaleString("fa-IR")}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-              </TableBody>
-            </Table>
+                        </span>
+                      </div>
+                      {"thread" in e ? (
+                        <Link
+                          to="/threads/$id"
+                          params={{ id: e.thread.id }}
+                          className="mt-2 block line-clamp-2 text-sm font-semibold hover:underline"
+                        >
+                          {e.thread.title}
+                        </Link>
+                      ) : (
+                        <p className="mt-2 text-sm text-muted-foreground">—</p>
+                      )}
+                      {e.type === "reply" ? (
+                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{e.reply.excerpt}</p>
+                      ) : null}
+                      <p className="mt-2 text-[11px] text-muted-foreground">
+                        {new Date(e.createdAt).toLocaleString("fa-IR")}
+                      </p>
+                    </div>
+                  ))}
+            </div>
+
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="text-start">زمان</TableHead>
+                    <TableHead className="text-start">عمل</TableHead>
+                    <TableHead className="text-start">موضوع</TableHead>
+                    <TableHead className="text-start">امتیاز</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {eventsQ.isLoading
+                    ? Array.from({ length: 6 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell>
+                            <Skeleton className="h-4 w-28" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-36" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-56" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-12" />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    : events.map((e) => (
+                        <TableRow key={e.id} className="hover:bg-muted/30">
+                          <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                            {new Date(e.createdAt).toLocaleString("fa-IR")}
+                          </TableCell>
+                          <TableCell>
+                            <ActionBadge e={e} />
+                          </TableCell>
+                          <TableCell className="max-w-[28rem]">
+                            {"thread" in e ? (
+                              <Link
+                                to="/threads/$id"
+                                params={{ id: e.thread.id }}
+                                className="line-clamp-1 text-sm font-semibold hover:underline"
+                              >
+                                {e.thread.title}
+                              </Link>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">—</span>
+                            )}
+                            {e.type === "reply" ? (
+                              <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{e.reply.excerpt}</p>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="font-extrabold text-primary">
+                            +{e.points.toLocaleString("fa-IR")}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                </TableBody>
+              </Table>
+            </div>
 
             {!eventsQ.isLoading && events.length === 0 ? (
               <div className="py-10 text-center text-sm text-muted-foreground">هنوز فعالیت امتیازدار ثبت نشده</div>

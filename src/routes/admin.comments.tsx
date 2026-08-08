@@ -57,7 +57,7 @@ function AdminCommentsPage() {
 
   if (!auth.isAdmin) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-8">
+      <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
         <div className="rounded-xl border border-border/60 bg-card p-6 text-sm text-muted-foreground shadow-card">
           دسترسی مدیریت لازم است. با `admin@threadly.com` (رمز: `threadly`) وارد شوید.
         </div>
@@ -66,7 +66,7 @@ function AdminCommentsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       <Link
         to="/admin"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -79,7 +79,7 @@ function AdminCommentsPage() {
           <MessageSquareText className="h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-3xl font-extrabold">مدیریت کامنت‌ها</h1>
+          <h1 className="text-2xl font-extrabold sm:text-3xl">مدیریت کامنت‌ها</h1>
           <p className="text-sm text-muted-foreground">جستجو، ویرایش و حذف پاسخ‌ها در موضوعات</p>
         </div>
       </div>

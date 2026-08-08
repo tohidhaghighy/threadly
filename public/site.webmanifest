@@ -1,19 +1,72 @@
 {
+  "id": "/",
   "name": "انجمن فاطر",
   "short_name": "فاطر",
   "description": "انجمن گفتگو برای ساخت کیس، عیب‌یابی و گیمینگ",
-  "start_url": "/",
+  "start_url": "/?utm_source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#f97316",
   "lang": "fa-IR",
   "dir": "rtl",
+  "categories": ["social", "forums", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "موضوع جدید",
+      "short_name": "جدید",
+      "description": "ایجاد موضوع جدید در انجمن",
+      "url": "/new",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "گفتگوها",
+      "short_name": "گفتگوها",
+      "description": "مرور گفتگوهای انجمن",
+      "url": "/threads",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "نصب اپلیکیشن",
+      "short_name": "نصب",
+      "description": "راهنمای نصب روی موبایل",
+      "url": "/install",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

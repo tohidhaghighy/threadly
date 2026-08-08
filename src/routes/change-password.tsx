@@ -78,7 +78,7 @@ function ChangePasswordPage() {
 
   if (!auth.token) {
     return (
-      <div className="mx-auto w-full max-w-xl px-4 py-10 md:px-8">
+      <div className="mx-auto w-full max-w-xl px-3 py-6 sm:px-4 sm:py-10 md:px-8">
         <Card className="border-border/60 bg-card shadow-card">
           <CardHeader>
             <CardTitle>{t("password.signInRequiredTitle")}</CardTitle>
@@ -98,7 +98,7 @@ function ChangePasswordPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-10 md:px-8">
+    <div className="mx-auto w-full max-w-xl px-3 py-6 sm:px-4 sm:py-10 md:px-8">
       <Card className="border-border/60 bg-card shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

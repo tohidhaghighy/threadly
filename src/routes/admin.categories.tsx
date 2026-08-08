@@ -174,7 +174,7 @@ function AdminCategoriesPage() {
 
   if (!auth.isAdmin) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-8">
+      <div className="mx-auto w-full max-w-5xl px-3 py-6 sm:px-4 sm:py-10 md:px-8">
         <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card">
           <div className="text-lg font-extrabold">{t("adminCategories.accessTitle")}</div>
           <p className="mt-1 text-sm text-muted-foreground">{t("adminCategories.accessDesc")}</p>
@@ -184,7 +184,7 @@ function AdminCategoriesPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+    <div className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-4 sm:py-10 md:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold">{t("adminCategories.title")}</h1>

@@ -12,6 +12,9 @@ import { ForumTopBanner } from "@/components/ForumTopBanner";
 import { SiteSeoBlurb } from "@/components/SiteSeoBlurb";
 import { PhoneRequiredBanner } from "@/components/shared/profile/PhoneRequiredBanner";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
+import { PwaRegister } from "@/components/PwaRegister";
+import { PwaInstallBanner } from "@/components/PwaInstallBanner";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 const GTM_ID = "GTM-MZ6KVF7C";
 const GTM_HEAD_SCRIPT = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -82,12 +85,16 @@ export const Route = createRootRoute({
     return {
       meta: [
         { charSet: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        {
+          name: "viewport",
+          content: "width=device-width, initial-scale=1, viewport-fit=cover",
+        },
         { name: "theme-color", content: "#f97316" },
         { name: "color-scheme", content: "light dark" },
         { name: "application-name", content: "انجمن فاطر" },
         { name: "apple-mobile-web-app-title", content: "انجمن فاطر" },
         { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "default" },
         { name: "mobile-web-app-capable", content: "yes" },
         { name: "format-detection", content: "telephone=no" },
         { name: "google", content: "notranslate" },
@@ -97,7 +104,7 @@ export const Route = createRootRoute({
         { rel: "stylesheet", href: appCss },
         { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
         { rel: "shortcut icon", href: "/favicon.svg" },
-        { rel: "apple-touch-icon", href: "/favicon.svg" },
+        { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png", sizes: "180x180" },
         { rel: "manifest", href: "/site.webmanifest" },
         { rel: "dns-prefetch", href: "https://www.googletagmanager.com" },
         { rel: "preconnect", href: "https://www.googletagmanager.com" },
@@ -148,10 +155,12 @@ function RootComponent() {
       <AppQueryProvider>
         <AuthProvider>
           <I18nProvider>
-            <div className="relative z-10 min-h-screen">
+            <div className="relative z-10 min-h-screen overflow-x-clip">
               <ForumTopBanner />
               <Outlet />
               <Toaster />
+              <PwaInstallBanner />
+              <PwaRegister />
             </div>
           </I18nProvider>
         </AuthProvider>
@@ -164,22 +173,25 @@ function RootComponent() {
       <AuthProvider>
         <I18nProvider>
           <SidebarProvider>
-            <div className="flex min-h-screen w-full">
+            <div className="flex min-h-screen w-full overflow-x-clip">
               <AppSidebar />
-              <div className="relative z-10 flex min-w-0 flex-1 flex-col">
+              <div className="relative z-10 flex min-w-0 flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
                 <div className="sticky top-0 z-40 border-b border-border/60 bg-background/90 shadow-sm backdrop-blur-xl">
                   <ForumTopBanner />
                   <AppHeader />
                   <PhoneRequiredBanner />
                 </div>
-                <main className="flex-1">
+                <main className="min-w-0 flex-1 overflow-x-clip">
                   <Outlet />
                 </main>
                 <SiteSeoBlurb />
                 <SiteFooter />
               </div>
             </div>
+            <MobileBottomNav />
             <Toaster />
+            <PwaInstallBanner />
+            <PwaRegister />
           </SidebarProvider>
         </I18nProvider>
       </AuthProvider>

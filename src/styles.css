@@ -181,6 +181,9 @@
 
   html {
     font-family: var(--font-sans);
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -188,6 +191,20 @@
     color: var(--color-foreground);
     font-feature-settings: "ss01", "ss02";
     direction: inherit;
+    overflow-x: clip;
+    min-width: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+    height: auto;
   }
 
   /* Background ambience */
@@ -219,5 +236,11 @@
   }
   .glow-ring {
     box-shadow: 0 0 0 1px var(--color-border), 0 0 24px -4px oklch(0.74 0.18 50 / 0.35);
+  }
+  .pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+  .pt-safe {
+    padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
   }
 }

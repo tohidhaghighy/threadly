@@ -1,7 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Globe, Home, MessageSquare, PlusCircle, ShieldCheck, Users, Settings, Cpu, Tags, HelpCircle, MessageSquareText } from "lucide-react";
+import { Download, Globe, Home, MessageSquare, PlusCircle, ShieldCheck, Users, Settings, Cpu, Tags, HelpCircle, MessageSquareText } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { useQuery } from "@tanstack/react-query";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +28,9 @@ export function AppSidebar() {
   const categoriesQuery = useCategories();
   const categories = categoriesQuery.data?.items ?? [];
   const iconByTitle = new Map(mockCategories.map((c) => [c.title, c.icon]));
+
+  // Mobile uses bottom nav + cards instead of the right sidebar sheet.
+  if (isMobile) return null;
 
   return (
     <Sidebar collapsible="icon" side={dir === "rtl" ? "right" : "left"}>
@@ -59,7 +61,12 @@ export function AppSidebar() {
               ].map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <Link to={item.url}>
+                    <Link
+                      to={item.url}
+                      onClick={() => {
+                        if (isMobile) setOpenMobile(false);
+                      }}
+                    >
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -114,7 +121,12 @@ export function AppSidebar() {
                 ].map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                      <Link to={item.url}>
+                      <Link
+                        to={item.url}
+                        onClick={() => {
+                          if (isMobile) setOpenMobile(false);
+                        }}
+                      >
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
@@ -128,7 +140,22 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        <div className="rounded-lg bg-gradient-primary/10 border border-primary/20 p-3 group-data-[collapsible=icon]:hidden">
+        <SidebarMenu className="mb-2 group-data-[collapsible=icon]:hidden">
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/install")}>
+              <Link
+                to="/install"
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                }}
+              >
+                <Download />
+                <span>{t("nav.install")}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <div className="rounded-lg border border-primary/20 bg-gradient-primary/10 p-3 group-data-[collapsible=icon]:hidden">
           <p className="text-xs font-semibold text-foreground">{t("footer.freeAccess")}</p>
           <p className="mt-1 text-[10px] text-muted-foreground">{t("footer.freeAccessDesc")}</p>
         </div>

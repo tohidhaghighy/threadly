@@ -156,7 +156,7 @@ function AdminPanel() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       {!auth.isAdmin ? (
         <div className="rounded-xl border border-border/60 bg-card p-6 text-sm text-muted-foreground shadow-card">
           دسترسی مدیریت لازم است. با `admin@threadly.com` (رمز: `threadly`) وارد شوید.
@@ -167,16 +167,20 @@ function AdminPanel() {
           <ShieldCheck className="h-6 w-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-3xl font-extrabold">پنل مدیریت</h1>
+          <h1 className="text-2xl font-extrabold sm:text-3xl">پنل مدیریت</h1>
           <p className="text-sm text-muted-foreground">بررسی و تأیید موضوعات ارسال‌شده</p>
         </div>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as "threads" | "users")} className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList>
-            <TabsTrigger value="threads">موضوعات</TabsTrigger>
-            <TabsTrigger value="users">کاربران</TabsTrigger>
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="threads" className="flex-1 sm:flex-none">
+              موضوعات
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex-1 sm:flex-none">
+              کاربران
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -187,21 +191,27 @@ function AdminPanel() {
             <StatCard label="رد شده" value={counts.rejected} icon={AlertCircle} accent="destructive" />
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-8 flex flex-col gap-3">
+            <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {(["all", "pending", "approved", "rejected"] as const).map((f) => (
-                <Button key={f} variant={filter === f ? "hero" : "outline"} size="sm" onClick={() => setFilter(f)}>
+                <Button
+                  key={f}
+                  variant={filter === f ? "hero" : "outline"}
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => setFilter(f)}
+                >
                   {f === "all" ? "همه" : statusConfig[f].label}
                 </Button>
               ))}
             </div>
 
-            <div className="w-full sm:w-64">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[16rem_minmax(0,20rem)]">
               <Select
                 value={category ?? "__all__"}
                 onValueChange={(v) => setCategory(v === "__all__" ? null : v)}
               >
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-10 sm:h-9">
                   <SelectValue placeholder="دسته‌بندی" />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,11 +223,11 @@ function AdminPanel() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
 
-            <div className="relative ms-auto w-full max-w-xs">
-              <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="جستجوی موضوع..." className="pe-10" />
+              <div className="relative w-full">
+                <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="جستجوی موضوع..." className="h-10 pe-10 sm:h-9" />
+              </div>
             </div>
           </div>
 
@@ -398,22 +408,22 @@ function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="users">
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 shadow-card">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card px-3 py-3 shadow-card sm:px-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
                 <Users className="h-5 w-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold">مدیریت کاربران</p>
                 <p className="text-xs text-muted-foreground">ارتقای مدیر، بن/رفع بن کاربران</p>
               </div>
             </div>
 
-            <div className="relative ms-auto w-full max-w-xs">
+            <div className="relative w-full sm:ms-auto sm:max-w-xs">
               <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="جستجوی کاربران..."
-                className="pe-10"
+                className="h-10 pe-10 sm:h-9"
                 value={userQuery}
                 onChange={(e) => setUserQuery(e.target.value)}
               />

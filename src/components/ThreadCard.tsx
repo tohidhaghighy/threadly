@@ -19,9 +19,9 @@ type Thread = {
 
 export function ThreadCard({ thread }: { thread: Thread }) {
   return (
-    <div className="group relative block overflow-hidden rounded-xl border border-border/60 bg-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-glow">
-      <div className="flex items-start gap-4">
-        <Avatar className="h-11 w-11 shrink-0 ring-2 ring-border">
+    <div className="group relative block overflow-hidden rounded-xl border border-border/60 bg-card p-3 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-glow sm:p-5">
+      <div className="flex items-start gap-3 sm:gap-4">
+        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-border sm:h-11 sm:w-11">
           {thread.author.avatarUrl ? <AvatarImage src={thread.author.avatarUrl} alt={thread.author.name} /> : null}
           <AvatarFallback className="bg-gradient-primary text-sm font-bold text-primary-foreground">
             {thread.author.avatar}

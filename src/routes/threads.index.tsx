@@ -133,9 +133,9 @@ function ThreadsPage() {
   const visible = cards;
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       <AnimatedSection className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold">
+        <h1 className="text-2xl font-extrabold sm:text-3xl">
           {activeCat ? `گفتگوهای ${activeCat}` : "همه گفتگوها"}
         </h1>
         <p className="text-sm text-muted-foreground">

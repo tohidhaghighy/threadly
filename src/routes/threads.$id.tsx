@@ -131,8 +131,8 @@ function ThreadPage() {
 
   if (threadQuery.isError) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-8">
-        <p className="rounded-xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
+      <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
+        <p className="rounded-xl border border-border/60 bg-card p-4 text-sm text-muted-foreground sm:p-6">
           این گفتگو یافت نشد یا هنوز تأیید نشده است.
         </p>
       </div>
@@ -140,13 +140,13 @@ function ThreadPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       <Link to="/threads" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowRight className="h-4 w-4" /> بازگشت به گفتگوها
       </Link>
 
       <article className="mt-4 animate-in fade-in slide-in-from-bottom-2 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-card duration-500">
-        <div className="border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-6">
+        <div className="border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-4 sm:p-6">
           {loading || !headerModel ? (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
@@ -176,7 +176,7 @@ function ThreadPage() {
                   </span>
                 ))}
               </div>
-              <h1 className="mt-4 text-2xl font-extrabold leading-relaxed md:text-3xl">{headerModel.title}</h1>
+              <h1 className="mt-4 text-xl font-extrabold leading-relaxed sm:text-2xl md:text-3xl">{headerModel.title}</h1>
 
               <div className="mt-4 flex items-center gap-3">
                 <Avatar className="h-11 w-11 ring-2 ring-primary/40">
@@ -196,7 +196,7 @@ function ThreadPage() {
           )}
         </div>
 
-        <div className="space-y-4 p-6 text-base leading-relaxed text-foreground/90">
+        <div className="space-y-4 p-4 text-sm leading-relaxed text-foreground/90 sm:p-6 sm:text-base">
           {headerModel?.content ? (
             <RichTextContent html={headerModel.content} className="text-base text-foreground/90" />
           ) : null}
@@ -231,7 +231,7 @@ function ThreadPage() {
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 px-6 py-4">
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 px-3 py-3 sm:px-6 sm:py-4">
           <Button
             variant="glow"
             size="sm"
