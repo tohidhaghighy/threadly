@@ -56,7 +56,7 @@ function LoginPage() {
     try {
       await auth.login(values.email, values.password);
       toast.success(t("auth.toastSignedIn"));
-      void navigate({ to: "/" });
+      await navigate({ to: "/" });
     } catch (e) {
       const err = e as ApiError;
       if (err?.status === 401) toast.error(t("auth.errorInvalidCredentials"));

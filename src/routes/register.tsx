@@ -63,7 +63,7 @@ function RegisterPage() {
     try {
       await auth.register(values.name, values.email, values.password);
       toast.success(t("auth.toastAccountCreated"));
-      void navigate({ to: "/" });
+      await navigate({ to: "/" });
     } catch (e) {
       const err = e as ApiError;
       if (err?.status === 409) toast.error(t("auth.errorEmailExists"));

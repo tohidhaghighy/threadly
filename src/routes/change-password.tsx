@@ -76,6 +76,19 @@ function ChangePasswordPage() {
     void navigate({ to: "/" });
   };
 
+  if (!auth.ready) {
+    return (
+      <div className="mx-auto w-full max-w-xl px-3 py-6 sm:px-4 sm:py-10 md:px-8">
+        <Card className="border-border/60 bg-card shadow-card">
+          <CardHeader>
+            <CardTitle>{t("password.signInRequiredTitle")}</CardTitle>
+            <CardDescription>در حال بررسی ورود...</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   if (!auth.token) {
     return (
       <div className="mx-auto w-full max-w-xl px-3 py-6 sm:px-4 sm:py-10 md:px-8">

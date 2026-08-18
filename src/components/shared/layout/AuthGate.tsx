@@ -5,6 +5,8 @@ import { pageContainerClasses } from "@/styles/shared/page";
 
 type AuthGateProps = {
   isAuthenticated: boolean;
+  /** When auth state is still restoring from storage */
+  ready?: boolean;
   message?: string;
   loginLabel?: string;
   children: ReactNode;
@@ -12,10 +14,21 @@ type AuthGateProps = {
 
 export function AuthGate({
   isAuthenticated,
+  ready = true,
   message = "برای ادامه وارد شوید.",
   loginLabel = "ورود",
   children,
 }: AuthGateProps) {
+  if (!ready) {
+    return (
+      <div className={pageContainerClasses}>
+        <div className="rounded-2xl border border-border/60 bg-card p-6 text-center shadow-card">
+          <p className="text-sm text-muted-foreground">در حال بررسی ورود...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isAuthenticated) return <>{children}</>;
 
   return (

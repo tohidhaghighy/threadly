@@ -8,20 +8,34 @@ function getToken() {
   }
 }
 
-export async function api<T>(path: string, init?: RequestInit & { auth?: boolean; authOptional?: boolean }): Promise<T> {
+export async function api<T>(
+  path: string,
+  init?: RequestInit & { auth?: boolean; authOptional?: boolean; token?: string | null },
+): Promise<T> {
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type") && !(init?.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
 
   if (init?.auth || init?.authOptional) {
-    const token = getToken();
+    const token = init.token !== undefined ? init.token : getToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
   const res = await fetch(path, { ...init, headers });
   const text = await res.text();
-  const json = text ? (JSON.parse(text) as unknown) : null;
+  let json: unknown = null;
+  if (text) {
+    try {
+      json = JSON.parse(text) as unknown;
+    } catch {
+      throw {
+        status: res.status || 500,
+        message: "Invalid JSON response",
+        details: text.slice(0, 200),
+      } satisfies ApiError;
+    }
+  }
 
   if (!res.ok) {
     const message =

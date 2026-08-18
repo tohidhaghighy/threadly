@@ -34,10 +34,17 @@ function SettingsProfilePage() {
 
   return (
     <AuthGate
-      isAuthenticated={!!auth.token && !!auth.user}
+      ready={auth.ready}
+      isAuthenticated={!!auth.token}
       message="برای ویرایش پروفایل وارد شوید."
     >
-      {auth.user ? (
+      {!auth.user ? (
+        <div className={pageContainerClasses}>
+          <div className="rounded-2xl border border-border/60 bg-card p-6 text-center shadow-card">
+            <p className="text-sm text-muted-foreground">در حال بارگذاری پروفایل...</p>
+          </div>
+        </div>
+      ) : (
         <div className={pageContainerClasses}>
           <PageBackLink to="/threads" label="بازگشت" />
 
@@ -55,7 +62,7 @@ function SettingsProfilePage() {
             </PageSection>
           </div>
         </div>
-      ) : null}
+      )}
     </AuthGate>
   );
 }
