@@ -14,7 +14,7 @@ export class ReplyReactionEntity {
   @ManyToOne(() => UserEntity, { onDelete: "CASCADE" })
   user!: UserEntity;
 
-  @Column({ type: "varchar", length: 16 })
+  @Column({ type: "nvarchar", length: 32, collation: "Latin1_General_100_CI_AS_SC" })
   emoji!: string;
 
   @CreateDateColumn()

@@ -13,19 +13,18 @@ export class ReplyAttachmentEntity {
   @ManyToOne(() => UserEntity, { eager: true })
   uploader!: UserEntity;
 
-  @Column({ type: "varchar", length: 255 })
+  @Column({ type: "nvarchar", length: 255 })
   originalFileName!: string;
 
-  @Column({ type: "varchar", length: 80 })
+  @Column({ type: "nvarchar", length: 80 })
   mimeType!: string;
 
   @Column({ type: "int" })
   sizeBytes!: number;
 
-  @Column({ type: "varchar", length: 600 })
+  @Column({ type: "nvarchar", length: 600 })
   url!: string;
 
   @CreateDateColumn()
   createdAt!: Date;
 }
-

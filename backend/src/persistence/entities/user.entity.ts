@@ -10,34 +10,34 @@ export class UserEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ type: "varchar", length: 120 })
+  @Column({ type: "nvarchar", length: 120 })
   name!: string;
 
-  @Column({ type: "varchar", length: 255, unique: true })
+  @Column({ type: "nvarchar", length: 255, unique: true })
   email!: string;
 
-  @Column({ type: "varchar", length: 255 })
+  @Column({ type: "nvarchar", length: 255 })
   passwordHash!: string;
 
-  @Column({ type: "varchar", length: 20, default: "user" })
+  @Column({ type: "nvarchar", length: 20, default: "user" })
   role!: UserRole;
 
-  @Column({ type: "varchar", length: 20, default: "active" })
+  @Column({ type: "nvarchar", length: 20, default: "active" })
   status!: UserStatus;
 
-  @Column({ type: "varchar", length: 512, nullable: true })
+  @Column({ type: "nvarchar", length: 512, nullable: true })
   avatarUrl!: string | null;
 
-  @Column({ type: "varchar", length: 20, nullable: true })
+  @Column({ type: "nvarchar", length: 20, nullable: true })
   phone!: string | null;
 
-  @Column({ type: "varchar", length: 26, nullable: true })
+  @Column({ type: "nvarchar", length: 26, nullable: true })
   bankShaba!: string | null;
 
-  @Column({ type: "varchar", length: 16, nullable: true })
+  @Column({ type: "nvarchar", length: 16, nullable: true })
   cardNumber!: string | null;
 
-  @Column({ type: "varchar", length: 10, nullable: true })
+  @Column({ type: "nvarchar", length: 10, nullable: true })
   birthDate!: string | null;
 
   /**
@@ -59,4 +59,3 @@ export class UserEntity {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

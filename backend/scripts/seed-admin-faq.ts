@@ -2,25 +2,29 @@
  * Seed official admin FAQ threads. Safe to run multiple times (idempotent).
  * Usage (from backend/): npm run db:seed-faq
  */
-import { join } from "node:path";
 import { DataSource } from "typeorm";
 
 import { UserEntity } from "../src/persistence/entities/user.entity";
 import { ThreadEntity } from "../src/persistence/entities/thread.entity";
 import { ReplyEntity } from "../src/persistence/entities/reply.entity";
 import { CategoryEntity } from "../src/persistence/entities/category.entity";
-import { AttachmentEntity } from "../src/persistence/entities/attachment.entity";
 import { ADMIN_FAQ_ITEMS, ADMIN_FAQ_SEED_TAG } from "../src/modules/app/seed-admin-faq.data";
+import {
+  buildMssqlDataSourceOptions,
+  DEFAULT_MSSQL_CONNECTION_STRING,
+} from "../src/persistence/typeorm.config";
 
 async function main() {
-  const dbPath = process.env.DB_PATH ?? join(process.cwd(), "threadly.sqlite");
+  if (!process.env.DB_CONNECTION_STRING && !process.env.DB_HOST) {
+    process.env.DB_CONNECTION_STRING = DEFAULT_MSSQL_CONNECTION_STRING;
+  }
 
-  const dataSource = new DataSource({
-    type: "sqlite",
-    database: dbPath,
-    entities: [UserEntity, ThreadEntity, ReplyEntity, CategoryEntity, AttachmentEntity],
-    synchronize: false,
-  });
+  const dataSource = new DataSource(
+    buildMssqlDataSourceOptions(
+      { get: (key) => process.env[key] },
+      { synchronize: false },
+    ),
+  );
 
   await dataSource.initialize();
 
@@ -85,7 +89,6 @@ async function main() {
     created++;
   }
 
-  console.log(`Database: ${dbPath}`);
   console.log(`Admin FAQ: ${created} created, ${skipped} skipped (already exist)`);
 
   await dataSource.destroy();

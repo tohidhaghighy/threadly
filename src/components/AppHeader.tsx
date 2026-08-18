@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Moon, Sun, PlusCircle, User, LogOut, Settings, Bell, AtSign, MessageCircle, Activity, Download, Cpu } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useI18n } from "@/lib/i18n";
@@ -86,13 +85,13 @@ export function AppHeader() {
 
   return (
     <header className="flex h-14 items-center gap-1.5 border-t border-border/50 bg-background/80 px-2 backdrop-blur-xl sm:h-16 sm:gap-3 sm:px-3 md:px-6">
-      <SidebarTrigger className="hidden shrink-0 md:inline-flex" />
-
-      <Link to="/" className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-          <Cpu className="h-4 w-4 text-primary-foreground" />
+      <Link to="/" className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-primary shadow-glow sm:h-9 sm:w-9">
+          <Cpu className="h-4 w-4 text-primary-foreground sm:h-5 sm:w-5" />
         </div>
-        <span className="truncate text-sm font-extrabold text-gradient-primary">{t("site.headerbrand")}</span>
+        <span className="truncate text-sm font-extrabold text-gradient-primary sm:text-base">
+          {t("site.headerbrand")}
+        </span>
       </Link>
 
       <div className="ms-auto flex shrink-0 items-center gap-0.5 sm:gap-1">

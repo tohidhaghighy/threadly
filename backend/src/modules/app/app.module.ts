@@ -15,17 +15,11 @@ import { PageSeoModule } from "../seo/page-seo.module";
 import { UserEntity } from "../../persistence/entities/user.entity";
 import { ThreadEntity } from "../../persistence/entities/thread.entity";
 import { ReplyEntity } from "../../persistence/entities/reply.entity";
-import { ReplyLikeEntity } from "../../persistence/entities/reply-like.entity";
-import { ReplyReactionEntity } from "../../persistence/entities/reply-reaction.entity";
-import { AttachmentEntity } from "../../persistence/entities/attachment.entity";
 import { CategoryEntity } from "../../persistence/entities/category.entity";
-import { ThreadLikeEntity } from "../../persistence/entities/thread-like.entity";
-import { ThreadViewEntity } from "../../persistence/entities/thread-view.entity";
-import { ReplyAttachmentEntity } from "../../persistence/entities/reply-attachment.entity";
-import { PageSeoEntity } from "../../persistence/entities/page-seo.entity";
 import { SeedService } from "./seed.service";
 import { StatsController } from "./stats.controller";
 import { SeoController } from "./seo.controller";
+import { buildTypeOrmModuleOptions } from "../../persistence/typeorm.config";
 
 @Module({
   imports: [
@@ -36,25 +30,7 @@ import { SeoController } from "./seo.controller";
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: "sqlite",
-        database: config.get<string>("DB_PATH") ?? "threadly.sqlite",
-        entities: [
-          UserEntity,
-          ThreadEntity,
-          ReplyEntity,
-          ReplyLikeEntity,
-          ReplyReactionEntity,
-          ReplyAttachmentEntity,
-          AttachmentEntity,
-          CategoryEntity,
-          ThreadLikeEntity,
-          ThreadViewEntity,
-          PageSeoEntity,
-        ],
-        synchronize: true,
-        logging: false,
-      }),
+      useFactory: (config: ConfigService) => buildTypeOrmModuleOptions(config),
     }),
     TypeOrmModule.forFeature([UserEntity, ThreadEntity, ReplyEntity, CategoryEntity]),
     AuthModule,
@@ -82,4 +58,3 @@ export class AppModule {
     this.seed.seedAvatarSamples();
   }
 }
-

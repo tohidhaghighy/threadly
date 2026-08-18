@@ -141,6 +141,9 @@ export class SeedService {
       },
     ];
 
+    const looksBroken = (value: string | null | undefined) =>
+      Boolean(value && /\?{3,}/.test(value) && !/[\u0600-\u06FF]/.test(value));
+
     for (const c of defaults) {
       let existing = await this.categoriesRepo.findOne({ where: { title: c.title } });
       if (!existing && c.title === "مونتاژ کیس") {
@@ -148,6 +151,13 @@ export class SeedService {
         if (legacy) {
           legacy.title = c.title;
           existing = legacy;
+        }
+      }
+      // Repair rows corrupted by former varchar columns (stored as ????)
+      if (!existing) {
+        const byOrder = await this.categoriesRepo.findOne({ where: { order: c.order } });
+        if (byOrder && (looksBroken(byOrder.title) || looksBroken(byOrder.description))) {
+          existing = byOrder;
         }
       }
       if (!existing) {
@@ -163,10 +173,19 @@ export class SeedService {
       }
 
       // keep defaults up to date for local dev convenience
+      existing.title = c.title;
       existing.description = c.description;
       existing.order = c.order;
       if (existing.isActive !== true) existing.isActive = true;
       await this.categoriesRepo.save(existing);
+    }
+
+    // Drop leftover categories whose titles were permanently mangled to "?"
+    const all = await this.categoriesRepo.find();
+    for (const row of all) {
+      if (!looksBroken(row.title)) continue;
+      if (defaults.some((d) => d.order === row.order && d.title === row.title)) continue;
+      await this.categoriesRepo.remove(row);
     }
   }
 
@@ -174,6 +193,20 @@ export class SeedService {
   async seedAdminFaqQa() {
     const admin = await this.usersRepo.findOne({ where: { email: "admin@threadly.com" } });
     if (!admin) return;
+
+    const looksBroken = (value: string | null | undefined) =>
+      Boolean(value && /\?{3,}/.test(value) && !/[\u0600-\u06FF]/.test(value));
+
+    // Remove FAQ rows corrupted by former varchar columns so they can be re-seeded.
+    const seeded = await this.threadsRepo
+      .createQueryBuilder("t")
+      .where("t.tags LIKE :tag", { tag: `%${ADMIN_FAQ_SEED_TAG}%` })
+      .getMany();
+    for (const t of seeded) {
+      if (!looksBroken(t.title) && !looksBroken(t.content)) continue;
+      await this.repliesRepo.delete({ thread: { id: t.id } as any });
+      await this.threadsRepo.delete(t.id);
+    }
 
     const existing = await this.threadsRepo
       .createQueryBuilder("t")

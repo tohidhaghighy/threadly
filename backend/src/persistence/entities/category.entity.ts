@@ -6,20 +6,20 @@ export class CategoryEntity {
   id!: string;
 
   @Index({ unique: true })
-  @Column({ type: "varchar", length: 80 })
+  @Column({ type: "nvarchar", length: 80 })
   title!: string;
 
-  @Column({ type: "varchar", length: 512, nullable: true })
+  @Column({ type: "nvarchar", length: 512, nullable: true })
   description!: string | null;
 
   @Column({ type: "simple-json", default: "[]" })
   seoKeywords!: string[];
 
-  @Column({ type: "int", default: 0 })
+  @Column({ type: "int", default: 0, name: "sortOrder" })
   order!: number;
 
   @Index()
-  @Column({ type: "boolean", default: true })
+  @Column({ type: "bit", default: true })
   isActive!: boolean;
 
   @CreateDateColumn()
@@ -28,4 +28,3 @@ export class CategoryEntity {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

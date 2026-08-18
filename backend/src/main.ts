@@ -21,7 +21,7 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle("Threadly API")
-    .setDescription("Threadly backend API (NestJS + TypeORM + SQLite + JWT).")
+    .setDescription("Threadly backend API (NestJS + TypeORM + SQL Server + JWT).")
     .setVersion("1.0.0")
     .addBearerAuth()
     .build();

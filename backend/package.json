@@ -13,7 +13,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:clear": "ts-node scripts/clear-except-admin.ts",
-    "db:seed-faq": "ts-node scripts/seed-admin-faq.ts"
+    "db:seed-faq": "ts-node scripts/seed-admin-faq.ts",
+    "db:fix-unicode": "ts-node scripts/fix-nvarchar-columns.ts",
+    "db:reseed-persian": "ts-node scripts/reseed-persian-content.ts",
+    "db:import-sqlite": "ts-node scripts/import-sqlite-to-mssql.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
@@ -28,13 +31,13 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "mssql": "^12.7.0",
     "multer": "^2.0.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "sanitize-html": "^2.17.5",
-    "sqlite3": "^5.1.7",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.26"
   },
@@ -56,6 +59,7 @@
     "eslint-config-prettier": "^10.1.1",
     "jest": "^30.0.5",
     "prettier": "^3.7.3",
+    "sqlite3": "^5.1.7",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.2",
     "ts-node": "^10.9.2",

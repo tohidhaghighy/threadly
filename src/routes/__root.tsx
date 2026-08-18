@@ -1,7 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider, useI18n } from "@/lib/i18n";
@@ -14,7 +12,7 @@ import { PhoneRequiredBanner } from "@/components/shared/profile/PhoneRequiredBa
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { PwaRegister } from "@/components/PwaRegister";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { BottomMegaMenu } from "@/components/BottomMegaMenu";
 
 const GTM_ID = "GTM-MZ6KVF7C";
 const GTM_HEAD_SCRIPT = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -121,14 +119,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        {/* Google Tag Manager */}
         <script dangerouslySetInnerHTML={{ __html: GTM_HEAD_SCRIPT }} />
-        {/* End Google Tag Manager */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
-        {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe
             src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
@@ -138,7 +133,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
             title="Google Tag Manager"
           />
         </noscript>
-        {/* End Google Tag Manager (noscript) */}
         {children}
         <Scripts />
       </body>
@@ -150,11 +144,12 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAuthRoute = pathname === "/login" || pathname === "/register";
 
-  if (isAuthRoute) {
-    return (
-      <AppQueryProvider>
-        <AuthProvider>
-          <I18nProvider>
+  // Keep Auth/Query/I18n mounted across login ↔ app so the session is not lost on navigate.
+  return (
+    <AppQueryProvider>
+      <AuthProvider>
+        <I18nProvider>
+          {isAuthRoute ? (
             <div className="relative z-10 min-h-screen overflow-x-clip">
               <ForumTopBanner />
               <Outlet />
@@ -162,20 +157,9 @@ function RootComponent() {
               <PwaInstallBanner />
               <PwaRegister />
             </div>
-          </I18nProvider>
-        </AuthProvider>
-      </AppQueryProvider>
-    );
-  }
-
-  return (
-    <AppQueryProvider>
-      <AuthProvider>
-        <I18nProvider>
-          <SidebarProvider>
-            <div className="flex min-h-screen w-full overflow-x-clip">
-              <AppSidebar />
-              <div className="relative z-10 flex min-w-0 flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+          ) : (
+            <>
+              <div className="relative z-10 flex min-h-screen w-full flex-col overflow-x-clip pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))]">
                 <div className="sticky top-0 z-40 border-b border-border/60 bg-background/90 shadow-sm backdrop-blur-xl">
                   <ForumTopBanner />
                   <AppHeader />
@@ -187,12 +171,12 @@ function RootComponent() {
                 <SiteSeoBlurb />
                 <SiteFooter />
               </div>
-            </div>
-            <MobileBottomNav />
-            <Toaster />
-            <PwaInstallBanner />
-            <PwaRegister />
-          </SidebarProvider>
+              <BottomMegaMenu />
+              <Toaster />
+              <PwaInstallBanner />
+              <PwaRegister />
+            </>
+          )}
         </I18nProvider>
       </AuthProvider>
     </AppQueryProvider>

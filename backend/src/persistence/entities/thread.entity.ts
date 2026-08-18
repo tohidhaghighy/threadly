@@ -20,27 +20,27 @@ export class ThreadEntity {
   id!: string;
 
   @Index()
-  @Column({ type: "varchar", length: 240 })
+  @Column({ type: "nvarchar", length: 240 })
   title!: string;
 
-  @Column({ type: "text" })
+  @Column({ type: "nvarchar", length: "MAX" })
   content!: string;
 
-  @Column({ type: "text" })
+  @Column({ type: "nvarchar", length: "MAX" })
   excerpt!: string;
 
   @Index()
-  @Column({ type: "varchar", length: 80 })
+  @Column({ type: "nvarchar", length: 80 })
   category!: string;
 
   @Column({ type: "simple-json", default: "[]" })
   tags!: string[];
 
   @Index()
-  @Column({ type: "varchar", length: 20, default: "pending" })
+  @Column({ type: "nvarchar", length: 20, default: "pending" })
   status!: ThreadStatus;
 
-  @Column({ type: "varchar", length: 10, nullable: true })
+  @Column({ type: "nvarchar", length: 10, nullable: true })
   language!: "fa" | "en" | null;
 
   @Column({ type: "int", default: 0 })
@@ -52,7 +52,7 @@ export class ThreadEntity {
   @Column({ type: "int", default: 0 })
   likesCount!: number;
 
-  @Column({ type: "varchar", length: 36, nullable: true })
+  @Column({ type: "nvarchar", length: 36, nullable: true })
   bestReplyId!: string | null;
 
   @ManyToOne(() => UserEntity, (u) => u.threads, { eager: true })
@@ -76,4 +76,3 @@ export class ThreadEntity {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

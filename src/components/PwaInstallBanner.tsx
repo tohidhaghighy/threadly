@@ -62,7 +62,7 @@ export function PwaInstallBanner() {
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-40 px-3 md:hidden">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] z-40 px-3 sm:hidden">
       <div className="pointer-events-auto mx-auto mb-2 flex max-w-lg items-start gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3 shadow-glow backdrop-blur-xl">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
           <Download className="h-5 w-5" />

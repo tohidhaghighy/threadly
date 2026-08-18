@@ -34,8 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() => getStoredToken());
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  const refreshMe = async () => {
-    if (!token) {
+  const refreshMe = async (overrideToken?: string | null) => {
+    const activeToken = overrideToken === undefined ? token : overrideToken;
+    if (!activeToken) {
       setUser(null);
       return;
     }
@@ -52,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     storeToken(token);
-    void refreshMe();
+    void refreshMe(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -66,6 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           method: "POST",
           body: JSON.stringify({ email, password }),
         });
+        // Persist before any navigation so remounts / new API calls see the session.
+        storeToken(res.token);
         setToken(res.token);
         setUser(res.user);
       },
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           method: "POST",
           body: JSON.stringify({ name, email, password }),
         });
+        storeToken(res.token);
         setToken(res.token);
         setUser(res.user);
       },
@@ -82,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null);
         storeToken(null);
       },
-      refreshMe,
+      refreshMe: () => refreshMe(),
     }),
     [token, user],
   );

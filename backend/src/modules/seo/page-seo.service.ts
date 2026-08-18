@@ -113,6 +113,9 @@ export class PageSeoService implements OnModuleInit {
   }
 
   async seedDefaults() {
+    const looksBroken = (value: string | null | undefined) =>
+      Boolean(value && /\?{3,}/.test(value) && !/[\u0600-\u06FF]/.test(value));
+
     for (const p of DEFAULT_PAGES) {
       const existing = await this.repo.findOne({ where: { pageKey: p.pageKey } });
       if (!existing) {
@@ -121,9 +124,18 @@ export class PageSeoService implements OnModuleInit {
       }
       existing.label = p.label;
       existing.path = p.path;
-      if (!existing.description?.trim()) existing.description = p.description;
-      if (!existing.keywords?.length) existing.keywords = p.keywords;
-      if (existing.footerBlurb == null && p.footerBlurb) existing.footerBlurb = p.footerBlurb;
+      if (!existing.description?.trim() || looksBroken(existing.description)) {
+        existing.description = p.description;
+      }
+      if (!existing.keywords?.length || existing.keywords.some((k) => looksBroken(k))) {
+        existing.keywords = p.keywords;
+      }
+      if ((existing.footerBlurb == null || looksBroken(existing.footerBlurb)) && p.footerBlurb) {
+        existing.footerBlurb = p.footerBlurb;
+      }
+      if (looksBroken(existing.label)) existing.label = p.label;
+      if (looksBroken(existing.title)) existing.title = p.title;
+      if (looksBroken(existing.titleAbsolute)) existing.titleAbsolute = p.titleAbsolute;
       // Keep private routes aligned with robots.txt
       if (["new", "login", "register", "settings", "change-password"].includes(p.pageKey)) {
         existing.noindex = true;

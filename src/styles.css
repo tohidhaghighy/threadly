@@ -244,3 +244,36 @@
     padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
   }
 }
+
+@keyframes mega-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes mega-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.mega-section-in,
+.mega-card-in {
+  animation: mega-fade-in 0.35s ease-out both;
+}
+
+.mega-section-out,
+.mega-card-out {
+  animation: mega-fade-out 0.2s ease-in both;
+}
+

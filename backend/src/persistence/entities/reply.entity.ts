@@ -13,7 +13,7 @@ export class ReplyEntity {
   @ManyToOne(() => UserEntity, (u) => u.replies, { eager: true })
   author!: UserEntity;
 
-  @Column({ type: "text" })
+  @Column({ type: "nvarchar", length: "MAX" })
   content!: string;
 
   @Column({ type: "int", default: 0 })
@@ -22,4 +22,3 @@ export class ReplyEntity {
   @CreateDateColumn()
   createdAt!: Date;
 }
-

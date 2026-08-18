@@ -6,34 +6,34 @@ export class PageSeoEntity {
   id!: string;
 
   @Index({ unique: true })
-  @Column({ type: "varchar", length: 40 })
+  @Column({ type: "nvarchar", length: 40 })
   pageKey!: string;
 
-  @Column({ type: "varchar", length: 80 })
+  @Column({ type: "nvarchar", length: 80 })
   label!: string;
 
-  @Column({ type: "varchar", length: 120 })
+  @Column({ type: "nvarchar", length: 120 })
   path!: string;
 
   /** Appended with site name when titleAbsolute is null. */
-  @Column({ type: "varchar", length: 120, nullable: true })
+  @Column({ type: "nvarchar", length: 120, nullable: true })
   title!: string | null;
 
   /** Full document title (no site suffix). */
-  @Column({ type: "varchar", length: 160, nullable: true })
+  @Column({ type: "nvarchar", length: 160, nullable: true })
   titleAbsolute!: string | null;
 
-  @Column({ type: "varchar", length: 512 })
+  @Column({ type: "nvarchar", length: 512 })
   description!: string;
 
   @Column({ type: "simple-json", default: "[]" })
   keywords!: string[];
 
-  @Column({ type: "boolean", default: false })
+  @Column({ type: "bit", default: false })
   noindex!: boolean;
 
   /** Long crawlable intro shown above the footer on the home page. */
-  @Column({ type: "text", nullable: true })
+  @Column({ type: "nvarchar", length: "MAX", nullable: true })
   footerBlurb!: string | null;
 
   @CreateDateColumn()
