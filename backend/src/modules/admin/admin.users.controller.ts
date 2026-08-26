@@ -27,6 +27,15 @@ export class AdminUsersController {
     return this.users.listAdmin({ q, role, status });
   }
 
+  @Get(":id")
+  @ApiResponse({
+    status: 200,
+    description: "Admin user profile with threads, comments, and reactions",
+  })
+  detail(@Param("id") id: string) {
+    return this.users.adminUserDetail(id);
+  }
+
   @Post(":id/role")
   @ApiBody({ schema: { example: { role: "admin" } } })
   @ApiResponse({ status: 201, schema: { example: { id: "uuid", role: "admin" } } })
@@ -41,4 +50,3 @@ export class AdminUsersController {
     return this.users.setStatus(id, dto.status);
   }
 }
-

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { Check, X, ShieldCheck, Clock, AlertCircle, Search, Users, Image as ImageIcon } from "lucide-react";
+import { Check, X, ShieldCheck, Clock, AlertCircle, Search, Users, Image as ImageIcon, Trash2 } from "lucide-react";
 import { useMemo, useState, type ComponentType } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type ThreadDetail } from "@/lib/api";
+import { deleteAdminThread } from "@/api/admin";
 import { useI18n } from "@/lib/i18n";
 import {
   Dialog,
@@ -92,6 +93,7 @@ function AdminPanel() {
         id: t.id,
         title: t.title,
         author: t.author?.displayName ?? "نامشخص",
+        authorId: t.author?.id as string | undefined,
         category: t.category,
         date: new Date(t.createdAt).toLocaleDateString(),
         status: t.status as "pending" | "approved" | "rejected",
@@ -127,6 +129,19 @@ function AdminPanel() {
       await qc.invalidateQueries({ queryKey: ["threads"] });
       await qc.invalidateQueries({ queryKey: ["adminThreadDetail"] });
     },
+  });
+
+  const deleteThreadMut = useMutation({
+    mutationFn: (id: string) => deleteAdminThread(id),
+    onSuccess: async () => {
+      toast.success("موضوع حذف شد");
+      setReviewOpen(false);
+      setSelectedThreadId(null);
+      await qc.invalidateQueries({ queryKey: ["adminThreads"] });
+      await qc.invalidateQueries({ queryKey: ["threads"] });
+      await qc.invalidateQueries({ queryKey: ["adminUserDetail"] });
+    },
+    onError: () => toast.error("حذف موضوع ناموفق بود"),
   });
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -249,7 +264,19 @@ function AdminPanel() {
                   return (
                     <TableRow key={item.id} className="hover:bg-muted/30">
                       <TableCell className="max-w-md font-medium">{item.title}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{item.author}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {item.authorId ? (
+                          <Link
+                            to="/admin/users/$id"
+                            params={{ id: item.authorId }}
+                            className="hover:text-primary hover:underline"
+                          >
+                            {item.author}
+                          </Link>
+                        ) : (
+                          item.author
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="border-primary/30 text-primary">{item.category}</Badge>
                       </TableCell>
@@ -260,17 +287,32 @@ function AdminPanel() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-w-[5.5rem]"
-                          onClick={() => {
-                            setSelectedThreadId(item.id);
-                            setReviewOpen(true);
-                          }}
-                        >
-                          {t("admin.reviewOperationsBtn")}
-                        </Button>
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="min-w-[5.5rem]"
+                            onClick={() => {
+                              setSelectedThreadId(item.id);
+                              setReviewOpen(true);
+                            }}
+                          >
+                            {t("admin.reviewOperationsBtn")}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={deleteThreadMut.isPending}
+                            onClick={() => {
+                              const ok = window.confirm("این موضوع و تمام کامنت‌های آن حذف شود؟");
+                              if (!ok) return;
+                              deleteThreadMut.mutate(item.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            حذف
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -372,6 +414,20 @@ function AdminPanel() {
                       {t("admin.reviewClose")}
                     </Button>
                     <div className="flex flex-wrap justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={deleteThreadMut.isPending}
+                        onClick={() => {
+                          if (!selectedThreadId) return;
+                          const ok = window.confirm("این موضوع و تمام کامنت‌های آن حذف شود؟");
+                          if (!ok) return;
+                          deleteThreadMut.mutate(selectedThreadId);
+                        }}
+                      >
+                        <Trash2 className="me-1 h-4 w-4" />
+                        حذف موضوع
+                      </Button>
                       {reviewDetailQuery.data.status === "approved" ? (
                         <Button variant="secondary" asChild>
                           <Link to="/threads/$id" params={{ id: reviewDetailQuery.data.id }}>
@@ -415,7 +471,7 @@ function AdminPanel() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold">مدیریت کاربران</p>
-                <p className="text-xs text-muted-foreground">ارتقای مدیر، بن/رفع بن کاربران</p>
+                <p className="text-xs text-muted-foreground">پروفایل، فعالیت‌ها، ارتقا و بن کاربران</p>
               </div>
             </div>
 
@@ -445,7 +501,15 @@ function AdminPanel() {
               <TableBody>
                 {users.map((u) => (
                   <TableRow key={u.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium">{u.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        to="/admin/users/$id"
+                        params={{ id: u.id }}
+                        className="text-foreground hover:text-primary hover:underline"
+                      >
+                        {u.name}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
                     <TableCell>
                       <Badge
@@ -463,9 +527,18 @@ function AdminPanel() {
                         {u.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{u.joinedAt}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {typeof u.joinedAt === "string"
+                        ? new Date(u.joinedAt).toLocaleDateString("fa-IR")
+                        : new Date(u.joinedAt).toLocaleDateString("fa-IR")}
+                    </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to="/admin/users/$id" params={{ id: u.id }}>
+                            پروفایل
+                          </Link>
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"

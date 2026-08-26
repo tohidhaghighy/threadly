@@ -66,6 +66,74 @@ export class UsersService {
     return { id: saved.id, status: saved.status };
   }
 
+  async adminUserDetail(userId: string) {
+    const user = await this.findById(userId);
+
+    const [threads, replies, reactions] = await Promise.all([
+      this.threadsRepo.find({
+        where: { author: { id: userId } },
+        order: { createdAt: "DESC" },
+        take: 200,
+      }),
+      this.repliesRepo.find({
+        where: { author: { id: userId } },
+        relations: { thread: true },
+        order: { createdAt: "DESC" },
+        take: 200,
+      }),
+      this.reactionsRepo.find({
+        where: { user: { id: userId } },
+        relations: { reply: { thread: true } },
+        order: { createdAt: "DESC" },
+        take: 300,
+      }),
+    ]);
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        avatarUrl: user.avatarUrl,
+        phone: user.phone ?? null,
+        joinedAt: user.createdAt,
+        adminDeletedRepliesCount: user.adminDeletedRepliesCount ?? 0,
+      },
+      counts: {
+        threads: threads.length,
+        comments: replies.length,
+        reactions: reactions.length,
+      },
+      threads: threads.map((t) => ({
+        id: t.id,
+        title: t.title,
+        category: t.category,
+        status: t.status,
+        createdAt: t.createdAt,
+        repliesCount: t.repliesCount,
+      })),
+      comments: replies.map((r) => ({
+        id: r.id,
+        content: r.content,
+        createdAt: r.createdAt,
+        thread: r.thread
+          ? { id: r.thread.id, title: r.thread.title }
+          : { id: "", title: "—" },
+      })),
+      reactions: reactions.map((rr) => ({
+        id: rr.id,
+        emoji: rr.emoji,
+        createdAt: rr.createdAt,
+        replyId: rr.reply?.id ?? null,
+        thread: rr.reply?.thread
+          ? { id: rr.reply.thread.id, title: rr.reply.thread.title }
+          : { id: "", title: "—" },
+      })),
+    };
+  }
+
   private scoreOf(counts: { threads: number; comments: number; reactions: number }) {
     return scoreFromCounts(counts);
   }
