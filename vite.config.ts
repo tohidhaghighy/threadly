@@ -71,13 +71,15 @@ function tanstackStartPwaSw(): Plugin {
   };
 }
 
+const apiProxyTarget = process.env.API_PROXY_TARGET || "http://localhost:3001";
+
 export default defineConfig({
   plugins: [tanstackStartPwaSw()],
   vite: {
     server: {
       proxy: {
-        "/api": { target: "http://localhost:3001", changeOrigin: true },
-        "/uploads": { target: "http://localhost:3001", changeOrigin: true },
+        "/api": { target: apiProxyTarget, changeOrigin: true },
+        "/uploads": { target: apiProxyTarget, changeOrigin: true },
       },
     },
   },

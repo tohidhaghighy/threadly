@@ -1,0 +1,17 @@
+services:
+  threadly:
+    build: .
+    ports:
+      - "4059:4059"
+      - "4050:4050"
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: "4050"
+      WEB_PORT: "4059"
+      API_PROXY_TARGET: "http://127.0.0.1:4050"
+    volumes:
+      - threadly-uploads:/app/backend/uploads
+
+volumes:
+  threadly-uploads:

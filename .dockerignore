@@ -1,0 +1,16 @@
+node_modules
+backend/node_modules
+dist
+dist-ssr
+backend/dist
+.git
+.github
+.cursor
+backend/.env
+backend/uploads
+*.log
+.output
+.vinxi
+.nitro
+.wrangler
+agent-transcripts
