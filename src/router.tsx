@@ -59,7 +59,11 @@ export const getRouter = () => {
     routeTree,
     context: {},
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
+    // Avoid re-fetching every hover/click; staleTime 0 made navigations feel stuck
+    // when a previous preload/load never settled.
+    defaultPreload: false,
+    defaultPreloadStaleTime: 30_000,
+    defaultPendingMs: 0,
     defaultErrorComponent: DefaultErrorComponent,
   });
 

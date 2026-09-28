@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Children, cloneElement, isValidElement, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import {
   ArrowRight,
   MessageSquare,
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
 
 export const Route = createFileRoute("/admin/users/$id")({
   head: () => {
@@ -99,6 +100,9 @@ function AdminUserDetailPage() {
   const data = detailQuery.data;
   const user = data?.user;
   const counts = data?.counts;
+  const threadPage = useClientPage(data?.threads ?? [], `threads|${id}`);
+  const commentPage = useClientPage(data?.comments ?? [], `comments|${id}`);
+  const reactionPage = useClientPage(data?.reactions ?? [], `reactions|${id}`);
 
   const initials = useMemo(
     () => (user?.name ? user.name.slice(0, 2).toUpperCase() : "U"),
@@ -116,7 +120,7 @@ function AdminUserDetailPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
+    <div dir="rtl" className="admin-rtl mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       <Link
         to="/admin"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -171,7 +175,7 @@ function AdminUserDetailPage() {
                   : ""}
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:min-w-[16rem]">
+            <div className="grid w-full grid-cols-3 gap-2 sm:w-auto sm:min-w-[16rem]">
               <StatChip icon={MessageSquare} label="موضوع" value={counts?.threads ?? 0} />
               <StatChip icon={MessageSquareText} label="کامنت" value={counts?.comments ?? 0} />
               <StatChip icon={Smile} label="واکنش" value={counts?.reactions ?? 0} />
@@ -183,21 +187,31 @@ function AdminUserDetailPage() {
             onValueChange={(v) => setTab(v as typeof tab)}
             className="mt-6"
           >
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="threads" className="flex-1 sm:flex-none">
+            <TabsList className="grid h-auto w-full grid-cols-3 sm:inline-flex sm:w-auto">
+              <TabsTrigger value="threads" className="px-1 text-[11px] sm:flex-none sm:px-3 sm:text-sm">
                 موضوعات ({counts?.threads ?? 0})
               </TabsTrigger>
-              <TabsTrigger value="comments" className="flex-1 sm:flex-none">
+              <TabsTrigger value="comments" className="px-1 text-[11px] sm:flex-none sm:px-3 sm:text-sm">
                 کامنت‌ها ({counts?.comments ?? 0})
               </TabsTrigger>
-              <TabsTrigger value="reactions" className="flex-1 sm:flex-none">
+              <TabsTrigger value="reactions" className="px-1 text-[11px] sm:flex-none sm:px-3 sm:text-sm">
                 واکنش‌ها ({counts?.reactions ?? 0})
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="threads" className="mt-4">
-              <ActivityTable empty="موضوعی ثبت نشده">
-                {(data?.threads ?? []).map((t) => {
+              <ActivityTable
+                empty="موضوعی ثبت نشده"
+                pager={
+                  <AdminPager
+                    page={threadPage.page}
+                    pageCount={threadPage.pageCount}
+                    total={threadPage.total}
+                    onPageChange={threadPage.setPage}
+                  />
+                }
+              >
+                {threadPage.items.map((t) => {
                   const cfg = statusConfig[t.status];
                   return (
                     <TableRow key={t.id}>
@@ -216,7 +230,7 @@ function AdminUserDetailPage() {
                         {new Date(t.createdAt).toLocaleString("fa-IR")}
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                           {t.status === "approved" ? (
                             <Button variant="outline" size="sm" asChild>
                               <Link to="/threads/$id" params={{ id: t.id }}>
@@ -245,8 +259,19 @@ function AdminUserDetailPage() {
             </TabsContent>
 
             <TabsContent value="comments" className="mt-4">
-              <ActivityTable empty="کامنتی ثبت نشده" heads={["موضوع", "متن", "تاریخ", "عملیات"]}>
-                {(data?.comments ?? []).map((c) => (
+              <ActivityTable
+                empty="کامنتی ثبت نشده"
+                heads={["موضوع", "متن", "تاریخ", "عملیات"]}
+                pager={
+                  <AdminPager
+                    page={commentPage.page}
+                    pageCount={commentPage.pageCount}
+                    total={commentPage.total}
+                    onPageChange={commentPage.setPage}
+                  />
+                }
+              >
+                {commentPage.items.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="max-w-xs">
                       {c.thread.id ? (
@@ -289,8 +314,19 @@ function AdminUserDetailPage() {
             </TabsContent>
 
             <TabsContent value="reactions" className="mt-4">
-              <ActivityTable empty="واکنشی ثبت نشده" heads={["ایموجی", "موضوع", "تاریخ", "عملیات"]}>
-                {(data?.reactions ?? []).map((r) => (
+              <ActivityTable
+                empty="واکنشی ثبت نشده"
+                heads={["ایموجی", "موضوع", "تاریخ", "عملیات"]}
+                pager={
+                  <AdminPager
+                    page={reactionPage.page}
+                    pageCount={reactionPage.pageCount}
+                    total={reactionPage.total}
+                    onPageChange={reactionPage.setPage}
+                  />
+                }
+              >
+                {reactionPage.items.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="text-2xl">{r.emoji}</TableCell>
                     <TableCell className="max-w-md">
@@ -358,17 +394,29 @@ function ActivityTable({
   children,
   empty,
   heads = ["عنوان", "دسته", "وضعیت", "تاریخ", "عملیات"],
+  pager,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   empty: string;
   heads?: string[];
+  pager?: ReactNode;
 }) {
+  const labeled = Children.map(children, (row) => {
+    if (!isValidElement(row)) return row;
+    const cells = Children.map(row.props.children, (cell, index) => {
+      if (!isValidElement(cell)) return cell;
+      return cloneElement(cell as ReactElement<{ "data-label"?: string }>, {
+        "data-label": heads[index] ?? "",
+      });
+    });
+    return cloneElement(row as ReactElement<{ children?: ReactNode }>, {}, cells);
+  });
   const rows = Array.isArray(children) ? children : [children];
   const hasRows = rows.filter(Boolean).length > 0;
 
   return (
     <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-card">
-      <Table>
+      <Table mobileStack dir="rtl">
         <TableHeader>
           <TableRow className="bg-muted/40 hover:bg-muted/40">
             {heads.map((h, i) => (
@@ -378,11 +426,12 @@ function ActivityTable({
             ))}
           </TableRow>
         </TableHeader>
-        <TableBody>{children}</TableBody>
+        <TableBody>{labeled}</TableBody>
       </Table>
       {!hasRows ? (
         <div className="py-12 text-center text-sm text-muted-foreground">{empty}</div>
       ) : null}
+      {pager}
     </div>
   );
 }

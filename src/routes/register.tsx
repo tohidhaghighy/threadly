@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -42,6 +43,12 @@ function RegisterPage() {
   const auth = useAuth();
   const { t } = useI18n();
 
+  // Redirect once the account is created and the session token is committed.
+  useEffect(() => {
+    if (!auth.token) return;
+    void navigate({ to: "/", replace: true });
+  }, [auth.token, navigate]);
+
   const registerSchema = z
     .object({
       name: z.string().min(2, t("auth.errorNameMin")),
@@ -63,7 +70,7 @@ function RegisterPage() {
     try {
       await auth.register(values.name, values.email, values.password);
       toast.success(t("auth.toastAccountCreated"));
-      await navigate({ to: "/" });
+      // Navigation is handled by the auth-state effect above once the token is set.
     } catch (e) {
       const err = e as ApiError;
       if (err?.status === 409) toast.error(t("auth.errorEmailExists"));

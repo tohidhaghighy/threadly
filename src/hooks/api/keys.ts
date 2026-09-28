@@ -11,5 +11,6 @@ export const queryKeys = {
   usersLeaderboard: ["usersLeaderboard"] as const,
   userProfile: (id: string) => ["userProfile", id] as const,
   userPointsEvents: (id: string) => ["userPointsEvents", id] as const,
-  adminReplies: (threadQ: string, q: string) => ["adminReplies", threadQ, q] as const,
+  adminReplies: (threadQ: string, q: string, authorId = "") =>
+    ["adminReplies", threadQ, q, authorId] as const,
 };

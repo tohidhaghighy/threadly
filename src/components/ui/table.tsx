@@ -2,19 +2,24 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative w-full max-w-full">
-      <div className="w-full max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
-        <table
-          ref={ref}
-          className={cn("w-full min-w-[32rem] caption-bottom text-sm sm:min-w-[36rem]", className)}
-          {...props}
-        />
-      </div>
+const Table = React.forwardRef<
+  HTMLTableElement,
+  React.HTMLAttributes<HTMLTableElement> & { mobileStack?: boolean }
+>(({ className, mobileStack, ...props }, ref) => (
+  <div className={cn("relative w-full max-w-full", mobileStack && "admin-mobile-stack")}>
+    <div className="w-full max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
+      <table
+        ref={ref}
+        className={cn(
+          "w-full caption-bottom text-sm",
+          mobileStack ? "min-w-0 md:min-w-[36rem]" : "min-w-[32rem] sm:min-w-[36rem]",
+          className,
+        )}
+        {...props}
+      />
     </div>
-  ),
-);
+  </div>
+));
 Table.displayName = "Table";
 
 const TableHeader = React.forwardRef<

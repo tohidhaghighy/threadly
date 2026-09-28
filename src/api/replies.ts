@@ -32,10 +32,11 @@ export type AdminReplyItem = {
   thread: { id: string; title: string };
 };
 
-export function fetchAdminReplies(params: { threadQ?: string; q?: string }) {
+export function fetchAdminReplies(params: { threadQ?: string; q?: string; authorId?: string }) {
   const qs = new URLSearchParams();
   if (params.threadQ?.trim()) qs.set("threadQ", params.threadQ.trim());
   if (params.q?.trim()) qs.set("q", params.q.trim());
+  if (params.authorId?.trim()) qs.set("authorId", params.authorId.trim());
   return api<{ items: AdminReplyItem[]; nextCursor: string | null }>(
     `/api/admin/replies?${qs.toString()}`,
     { auth: true },

@@ -202,23 +202,44 @@ export class RepliesService {
   }
 
   async toggleReaction(replyId: string, userId: string, emoji: ReplyReactionEmoji) {
-    const reply = await this.repliesRepo.findOne({ where: { id: replyId } });
-    if (!reply) throw new NotFoundException("Reply not found");
+    const reply = await this.repliesRepo.findOne({
+      where: { id: replyId },
+      relations: { thread: true },
+    });
+    if (!reply?.thread?.id) throw new NotFoundException("Reply not found");
 
     const user = await this.users.findById(userId);
+    const threadId = reply.thread.id;
 
-    const existing = await this.reactionsRepo.findOne({
-      where: { reply: { id: replyId }, user: { id: userId }, emoji },
-    });
+    const mine = await this.reactionsRepo
+      .createQueryBuilder("rr")
+      .innerJoinAndSelect("rr.reply", "reply")
+      .innerJoin("reply.thread", "thread")
+      .innerJoin("rr.user", "actor")
+      .where("actor.id = :userId", { userId })
+      .andWhere("thread.id = :threadId", { threadId })
+      .getMany();
 
-    if (existing) {
-      await this.reactionsRepo.remove(existing);
+    const same = mine.find((row) => row.reply?.id === replyId && row.emoji === emoji);
+    let action: "created" | "changed" | "removed";
+
+    if (same) {
+      await this.reactionsRepo.remove(mine);
+      action = "removed";
+    } else if (mine.length) {
+      const [keep, ...extras] = mine;
+      if (extras.length) await this.reactionsRepo.remove(extras);
+      keep.emoji = emoji;
+      keep.reply = reply;
+      await this.reactionsRepo.save(keep);
+      action = "changed";
     } else {
       await this.reactionsRepo.save(this.reactionsRepo.create({ reply, user, emoji }));
+      action = "created";
     }
 
     const reactions = await this.summarizeReactionsForReply(replyId, userId);
-    return { reactions };
+    return { reactions, action };
   }
 
   private async summarizeReactionsForReply(replyId: string, viewerId: string): Promise<ReplyReactionSummary[]> {

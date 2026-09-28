@@ -54,6 +54,11 @@ export class ThreadsController {
     return this.threads.listPublic({ category, sort, q, lang, cursor, limit });
   }
 
+  @Get("latest")
+  latest() {
+    return this.threads.latestApproved();
+  }
+
   @Get("categories")
   @ApiResponse({
     status: 200,

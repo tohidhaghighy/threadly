@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCategories } from "@/lib/categories";
 import { buildSeo } from "@/lib/seo";
+import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
 
 export const Route = createFileRoute("/admin")({
   head: () => {
@@ -52,6 +53,8 @@ function AdminPanel() {
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [userQuery, setUserQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
+  const [authorId, setAuthorId] = useState<string | null>(null);
+  const [threadSearch, setThreadSearch] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const auth = useAuth();
@@ -61,11 +64,13 @@ function AdminPanel() {
   const categories = categoriesQuery.data?.items ?? [];
 
   const threadsQuery = useQuery({
-    queryKey: ["adminThreads", filter, category],
+    queryKey: ["adminThreads", filter, category, authorId, threadSearch],
     queryFn: async () => {
       const qs = new URLSearchParams();
       if (filter !== "all") qs.set("status", filter);
       if (category) qs.set("category", category);
+      if (authorId) qs.set("authorId", authorId);
+      if (threadSearch.trim()) qs.set("q", threadSearch.trim());
       return api<{ items: any[]; nextCursor: string | null }>(`/api/admin/threads?${qs.toString()}`, { auth: true });
     },
     enabled: auth.isAdmin,
@@ -86,6 +91,13 @@ function AdminPanel() {
     },
     enabled: auth.isAdmin,
   });
+
+  const filterUsersQuery = useQuery({
+    queryKey: ["adminUsers", "filterOptions"],
+    queryFn: () => api<{ items: Array<{ id: string; name: string; email: string }> }>("/api/admin/users", { auth: true }),
+    enabled: auth.isAdmin,
+  });
+  const filterUsers = filterUsersQuery.data?.items ?? [];
 
   const items = useMemo(
     () =>
@@ -149,6 +161,8 @@ function AdminPanel() {
   const isAdminChildPath = pathname.startsWith("/admin/");
 
   const users = useMemo(() => usersQuery.data?.items ?? [], [usersQuery.data?.items]);
+  const threadPage = useClientPage(filtered, `${filter}|${category ?? ""}|${authorId ?? ""}|${threadSearch}`);
+  const userPage = useClientPage(users, userQuery);
   const setRoleMut = useMutation({
     mutationFn: ({ id, role }: { id: string; role: "user" | "admin" }) =>
       api(`/api/admin/users/${id}/role`, { method: "POST", auth: true, body: JSON.stringify({ role }) }),
@@ -171,7 +185,7 @@ function AdminPanel() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
+    <div dir="rtl" className="admin-rtl mx-auto w-full max-w-7xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       {!auth.isAdmin ? (
         <div className="rounded-xl border border-border/60 bg-card p-6 text-sm text-muted-foreground shadow-card">
           دسترسی مدیریت لازم است. با `admin@threadly.com` (رمز: `threadly`) وارد شوید.
@@ -189,7 +203,7 @@ function AdminPanel() {
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as "threads" | "users")} className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList className="w-full sm:w-auto">
+          <TabsList className="grid h-auto w-full grid-cols-2 sm:inline-flex sm:w-auto">
             <TabsTrigger value="threads" className="flex-1 sm:flex-none">
               موضوعات
             </TabsTrigger>
@@ -200,7 +214,7 @@ function AdminPanel() {
         </div>
 
         <TabsContent value="threads">
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 min-[480px]:grid-cols-3">
             <StatCard label="در انتظار بررسی" value={counts.pending} icon={Clock} accent="warning" />
             <StatCard label="تأیید شده" value={counts.approved} icon={Check} accent="success" />
             <StatCard label="رد شده" value={counts.rejected} icon={AlertCircle} accent="destructive" />
@@ -221,7 +235,7 @@ function AdminPanel() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[16rem_minmax(0,20rem)]">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <Select
                 value={category ?? "__all__"}
                 onValueChange={(v) => setCategory(v === "__all__" ? null : v)}
@@ -239,15 +253,37 @@ function AdminPanel() {
                 </SelectContent>
               </Select>
 
-              <div className="relative w-full">
+              <Select
+                value={authorId ?? "__all__"}
+                onValueChange={(v) => setAuthorId(v === "__all__" ? null : v)}
+              >
+                <SelectTrigger className="h-10 sm:h-9">
+                  <SelectValue placeholder="کاربر" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">همه کاربران</SelectItem>
+                  {filterUsers.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="relative w-full sm:col-span-2 lg:col-span-1">
                 <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="جستجوی موضوع..." className="h-10 pe-10 sm:h-9" />
+                <Input
+                  placeholder="جستجوی موضوع..."
+                  className="h-10 pe-10 sm:h-9"
+                  value={threadSearch}
+                  onChange={(e) => setThreadSearch(e.target.value)}
+                />
               </div>
             </div>
           </div>
 
           <div className="mt-4 overflow-hidden rounded-xl border border-border/60 bg-card shadow-card">
-            <Table>
+            <Table mobileStack dir="rtl">
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
                   <TableHead className="text-start">عنوان</TableHead>
@@ -259,12 +295,12 @@ function AdminPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((item) => {
+                {threadPage.items.map((item) => {
                   const cfg = statusConfig[item.status];
                   return (
                     <TableRow key={item.id} className="hover:bg-muted/30">
-                      <TableCell className="max-w-md font-medium">{item.title}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell data-label="عنوان" className="max-w-md font-medium">{item.title}</TableCell>
+                      <TableCell data-label="نویسنده" className="text-sm text-muted-foreground">
                         {item.authorId ? (
                           <Link
                             to="/admin/users/$id"
@@ -277,17 +313,17 @@ function AdminPanel() {
                           item.author
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="دسته‌بندی">
                         <Badge variant="outline" className="border-primary/30 text-primary">{item.category}</Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{item.date}</TableCell>
-                      <TableCell>
+                      <TableCell data-label="تاریخ" className="text-sm text-muted-foreground">{item.date}</TableCell>
+                      <TableCell data-label="وضعیت">
                         <Badge variant="outline" className={cfg.className}>
                           <cfg.icon className="me-1 h-3 w-3" />{cfg.label}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center justify-end gap-2">
+                      <TableCell data-label="عملیات">
+                        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                           <Button
                             variant="outline"
                             size="sm"
@@ -322,6 +358,12 @@ function AdminPanel() {
             {filtered.length === 0 && (
               <div className="py-16 text-center text-sm text-muted-foreground">نتیجه‌ای یافت نشد</div>
             )}
+            <AdminPager
+              page={threadPage.page}
+              pageCount={threadPage.pageCount}
+              total={threadPage.total}
+              onPageChange={threadPage.setPage}
+            />
           </div>
 
           <Dialog
@@ -331,7 +373,7 @@ function AdminPanel() {
               if (!open) setSelectedThreadId(null);
             }}
           >
-            <DialogContent className="max-h-[90vh] max-w-2xl gap-0 overflow-hidden p-0" dir="rtl">
+            <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl gap-0 overflow-hidden p-0" dir="rtl">
               <DialogHeader className="border-b border-border/60 px-6 py-4">
                 <DialogTitle>{t("admin.reviewDialogTitle")}</DialogTitle>
               </DialogHeader>
@@ -409,11 +451,11 @@ function AdminPanel() {
                     </div>
                   ) : null}
 
-                  <DialogFooter className="mt-4 flex-col-reverse gap-2 border-t border-border/60 px-6 py-4 sm:flex-row sm:justify-between">
+                  <DialogFooter className="mt-4 flex-col gap-2 border-t border-border/60 px-4 py-4 sm:flex-row sm:justify-between sm:px-6">
                     <Button type="button" variant="outline" onClick={() => setReviewOpen(false)}>
                       {t("admin.reviewClose")}
                     </Button>
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
                       <Button
                         type="button"
                         variant="destructive"
@@ -487,7 +529,7 @@ function AdminPanel() {
           </div>
 
           <div className="mt-4 overflow-hidden rounded-xl border border-border/60 bg-card shadow-card">
-            <Table>
+            <Table mobileStack dir="rtl">
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
                   <TableHead className="text-start">نام</TableHead>
@@ -499,9 +541,9 @@ function AdminPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => (
+                {userPage.items.map((u) => (
                   <TableRow key={u.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium">
+                    <TableCell data-label="نام" className="font-medium">
                       <Link
                         to="/admin/users/$id"
                         params={{ id: u.id }}
@@ -510,8 +552,8 @@ function AdminPanel() {
                         {u.name}
                       </Link>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="ایمیل" className="text-sm text-muted-foreground">{u.email}</TableCell>
+                    <TableCell data-label="نقش">
                       <Badge
                         variant="outline"
                         className={u.role === "admin" ? "border-primary/30 text-primary" : "border-border/60 text-muted-foreground"}
@@ -519,7 +561,7 @@ function AdminPanel() {
                         {u.role}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="وضعیت">
                       <Badge
                         variant="outline"
                         className={u.status === "banned" ? "border-destructive/30 text-destructive" : "border-success/30 text-success"}
@@ -527,13 +569,13 @@ function AdminPanel() {
                         {u.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell data-label="تاریخ عضویت" className="text-sm text-muted-foreground">
                       {typeof u.joinedAt === "string"
                         ? new Date(u.joinedAt).toLocaleDateString("fa-IR")
                         : new Date(u.joinedAt).toLocaleDateString("fa-IR")}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap items-center justify-end gap-2">
+                    <TableCell data-label="عملیات">
+                      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                         <Button variant="outline" size="sm" asChild>
                           <Link to="/admin/users/$id" params={{ id: u.id }}>
                             پروفایل
@@ -568,6 +610,12 @@ function AdminPanel() {
             {users.length === 0 ? (
               <div className="py-16 text-center text-sm text-muted-foreground">کاربری یافت نشد</div>
             ) : null}
+            <AdminPager
+              page={userPage.page}
+              pageCount={userPage.pageCount}
+              total={userPage.total}
+              onPageChange={userPage.setPage}
+            />
           </div>
         </TabsContent>
       </Tabs>

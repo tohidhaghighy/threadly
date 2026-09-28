@@ -53,15 +53,17 @@ export function ReplyActions({ reply, threadId }: Props) {
 
   const toggleReaction = async (emoji: string) => {
     if (!requireAuth()) return;
-    const alreadyReacted = !!reply.reactions.find((r) => r.emoji === emoji)?.reactedByMe;
     setBusy(true);
     try {
-      await api<{ reactions: ReplyListItem["reactions"] }>(`/api/replies/${reply.id}/reactions`, {
-        method: "POST",
-        auth: true,
-        body: JSON.stringify({ emoji }),
-      });
-      if (!alreadyReacted) {
+      const res = await api<{ reactions: ReplyListItem["reactions"]; action: "created" | "changed" | "removed" }>(
+        `/api/replies/${reply.id}/reactions`,
+        {
+          method: "POST",
+          auth: true,
+          body: JSON.stringify({ emoji }),
+        },
+      );
+      if (res.action === "created") {
         toast.success("+۱ امتیاز برای واکنش", {
           icon: <Coins className="h-4 w-4 text-amber-500" />,
         });
@@ -129,7 +131,10 @@ export function ReplyActions({ reply, threadId }: Props) {
                 key={emoji}
                 type="button"
                 disabled={busy}
-                className="flex h-10 w-10 items-center justify-center rounded-md text-lg transition hover:bg-muted"
+                className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-md text-lg transition hover:bg-muted",
+                  reply.reactions.some((r) => r.emoji === emoji && r.reactedByMe) && "bg-primary/15 ring-1 ring-primary/40",
+                )}
                 onClick={() => void toggleReaction(emoji)}
               >
                 {emoji}

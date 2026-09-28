@@ -24,11 +24,17 @@ export class AdminThreadsController {
   ) {}
 
   @Get()
-  async list(@Query("status") status?: ThreadStatus, @Query("q") q?: string, @Query("category") category?: string) {
+  async list(
+    @Query("status") status?: ThreadStatus,
+    @Query("q") q?: string,
+    @Query("category") category?: string,
+    @Query("authorId") authorId?: string,
+  ) {
     const qb = this.threadsRepo.createQueryBuilder("t").leftJoinAndSelect("t.author", "author");
     if (status) qb.where("t.status = :status", { status });
     if (q) qb.andWhere("LOWER(t.title) LIKE :q", { q: `%${q.toLowerCase()}%` });
     if (category) qb.andWhere("t.category = :category", { category });
+    if (authorId) qb.andWhere("author.id = :authorId", { authorId });
     qb.orderBy("t.createdAt", "DESC");
     const items = await qb.getMany();
     return {

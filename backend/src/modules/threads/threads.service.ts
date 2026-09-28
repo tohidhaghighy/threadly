@@ -66,6 +66,26 @@ export class ThreadsService {
     return { items };
   }
 
+  /** Newest publicly approved thread, used by the live “new post” notice. */
+  async latestApproved() {
+    const t = await this.threadsRepo
+      .createQueryBuilder("t")
+      .leftJoinAndSelect("t.author", "author")
+      .where("t.status = :status", { status: "approved" satisfies ThreadStatus })
+      .andWhere("t.approvedAt IS NOT NULL")
+      .orderBy("t.approvedAt", "DESC")
+      .take(1)
+      .getOne();
+    if (!t?.approvedAt) return { item: null };
+    return {
+      item: {
+        id: t.id,
+        title: t.title,
+        approvedAt: t.approvedAt.toISOString(),
+      },
+    };
+  }
+
   async listPublic(query?: { category?: string; q?: string; sort?: string; lang?: "fa" | "en"; cursor?: string; limit?: string }) {
     const qb = this.threadsRepo.createQueryBuilder("t").leftJoinAndSelect("t.author", "author");
     qb.where("t.status = :status", { status: "approved" satisfies ThreadStatus });

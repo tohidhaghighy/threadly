@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteAdminReply, fetchAdminReplies, updateAdminReply } from "@/api/replies";
 import { queryKeys } from "./keys";
 
-export function useAdminReplies(threadQ: string, q: string, enabled: boolean) {
+export function useAdminReplies(threadQ: string, q: string, enabled: boolean, authorId = "") {
   return useQuery({
-    queryKey: queryKeys.adminReplies(threadQ.trim(), q.trim()),
-    queryFn: () => fetchAdminReplies({ threadQ, q }),
+    queryKey: queryKeys.adminReplies(threadQ.trim(), q.trim(), authorId),
+    queryFn: () => fetchAdminReplies({ threadQ, q, authorId }),
     enabled,
   });
 }

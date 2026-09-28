@@ -207,14 +207,98 @@
     height: auto;
   }
 
-  /* Background ambience */
+  /* Background ambience (the animated 3D canvas layers on top of this) */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     background: var(--gradient-hero);
     pointer-events: none;
-    z-index: 0;
+    z-index: -20;
+  }
+}
+
+/* ===================================================================== */
+/* 3D animated background layers                                          */
+/* ===================================================================== */
+.bg3d-root {
+  contain: strict;
+}
+
+.bg3d-canvas {
+  opacity: 0.9;
+}
+
+.bg3d-aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.bg3d-aurora-1 {
+  top: -12%;
+  inset-inline-start: -8%;
+  width: 55vmax;
+  height: 55vmax;
+  background: radial-gradient(circle at 30% 30%, oklch(0.72 0.2 45 / 0.55), transparent 62%);
+  animation: aurora-drift-1 26s ease-in-out infinite alternate;
+}
+
+.bg3d-aurora-2 {
+  bottom: -18%;
+  inset-inline-end: -12%;
+  width: 60vmax;
+  height: 60vmax;
+  background: radial-gradient(circle at 60% 40%, oklch(0.7 0.16 25 / 0.5), transparent 60%);
+  animation: aurora-drift-2 32s ease-in-out infinite alternate;
+}
+
+.bg3d-aurora-3 {
+  top: 30%;
+  inset-inline-start: 40%;
+  width: 40vmax;
+  height: 40vmax;
+  background: radial-gradient(circle at 50% 50%, oklch(0.78 0.15 70 / 0.4), transparent 65%);
+  animation: aurora-drift-3 22s ease-in-out infinite alternate;
+}
+
+.dark .bg3d-aurora {
+  opacity: 0.42;
+}
+
+.bg3d-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, transparent 55%, oklch(0.16 0.012 260 / 0) 100%),
+    radial-gradient(ellipse at 50% 120%, oklch(0.5 0.02 50 / 0.06), transparent 60%);
+  pointer-events: none;
+}
+
+.dark .bg3d-vignette {
+  background:
+    radial-gradient(ellipse at 50% -10%, transparent 45%, oklch(0.1 0.01 260 / 0.55) 100%),
+    radial-gradient(ellipse at 50% 120%, oklch(0 0 0 / 0.4), transparent 55%);
+}
+
+@keyframes aurora-drift-1 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(6%, 8%, 0) scale(1.12); }
+}
+@keyframes aurora-drift-2 {
+  0% { transform: translate3d(0, 0, 0) scale(1.05); }
+  100% { transform: translate3d(-8%, -6%, 0) scale(1); }
+}
+@keyframes aurora-drift-3 {
+  0% { transform: translate3d(-4%, 0, 0) scale(0.95); }
+  100% { transform: translate3d(6%, -4%, 0) scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg3d-aurora {
+    animation: none;
   }
 }
 
@@ -242,6 +326,126 @@
   }
   .pt-safe {
     padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+  }
+
+  /* Glassmorphism surfaces (modern forum look) */
+  .glass {
+    background: color-mix(in oklab, var(--color-card) 62%, transparent);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+  }
+  .glass-strong {
+    background: color-mix(in oklab, var(--color-card) 82%, transparent);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    border: 1px solid color-mix(in oklab, var(--color-border) 75%, transparent);
+  }
+  .glass-panel {
+    background: color-mix(in oklab, var(--color-card) 55%, transparent);
+    backdrop-filter: blur(14px) saturate(135%);
+    -webkit-backdrop-filter: blur(14px) saturate(135%);
+    border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+  }
+
+  /* Gradient hairline border used on featured cards */
+  .border-gradient {
+    position: relative;
+  }
+  .border-gradient::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--primary) 70%, transparent),
+      transparent 45%,
+      color-mix(in oklab, var(--primary-glow) 55%, transparent)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.6;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .border-gradient:hover::after {
+    opacity: 1;
+  }
+
+  /* 3D tilt / lift interaction helpers */
+  .tilt-3d {
+    transform-style: preserve-3d;
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.35s ease,
+      border-color 0.35s ease;
+    will-change: transform;
+  }
+  .tilt-3d:hover {
+    transform: perspective(900px) translateY(-4px) rotateX(3deg) rotateY(-3deg) scale(1.012);
+  }
+
+  .lift {
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
+  }
+  .lift:hover {
+    transform: translateY(-3px);
+  }
+
+  .animate-float {
+    animation: float-y 6s ease-in-out infinite;
+  }
+  .animate-glow-pulse {
+    animation: glow-pulse 3.5s ease-in-out infinite;
+  }
+  .animate-gradient-text {
+    background-size: 200% auto;
+    animation: gradient-pan 6s linear infinite;
+  }
+  .animate-rise {
+    animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent), 0 0 20px -6px color-mix(in oklab, var(--primary) 45%, transparent); }
+  50% { box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 55%, transparent), 0 0 38px -4px color-mix(in oklab, var(--primary) 70%, transparent); }
+}
+
+@keyframes gradient-pan {
+  to { background-position: 200% center; }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-glow-pulse,
+  .animate-gradient-text,
+  .tilt-3d,
+  .lift {
+    animation: none !important;
+    transition: none !important;
+  }
+  .tilt-3d:hover,
+  .lift:hover {
+    transform: none;
   }
 }
 
@@ -275,5 +479,73 @@
 .mega-section-out,
 .mega-card-out {
   animation: mega-fade-out 0.2s ease-in both;
+}
+
+/* Admin pages: keep grids right-to-left and stack wide tables on phones */
+.admin-rtl {
+  direction: rtl;
+}
+
+@media (max-width: 767px) {
+  .admin-mobile-stack > div {
+    overflow-x: visible;
+  }
+
+  .admin-mobile-stack table,
+  .admin-mobile-stack tbody,
+  .admin-mobile-stack tr,
+  .admin-mobile-stack td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-mobile-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .admin-mobile-stack tr {
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 0.85rem;
+  }
+
+  .admin-mobile-stack td {
+    display: grid;
+    grid-template-columns: minmax(4.5rem, 34%) minmax(0, 1fr);
+    gap: 0.35rem 0.65rem;
+    align-items: start;
+    padding: 0.4rem 0;
+    text-align: start;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-mobile-stack td[data-label="عملیات"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-mobile-stack td[data-label="عملیات"]::before {
+    margin-bottom: 0.15rem;
+  }
+
+  .admin-mobile-stack td::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted-foreground);
+  }
+
+  .admin-mobile-stack td:not([data-label])::before {
+    content: none;
+  }
+
+  .admin-mobile-stack td .flex {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 

@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { buildSeo } from "@/lib/seo";
 import { formatKeywordsInput, parseKeywordsInput } from "@/lib/page-seo";
+import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
 
 type CategoryAdminItem = {
   id: string;
@@ -81,6 +82,7 @@ function AdminCategoriesPage() {
   });
 
   const items = useMemo(() => categoriesQuery.data?.items ?? [], [categoriesQuery.data?.items]);
+  const page = useClientPage(items);
 
   const maxOrder = useMemo(() => items.reduce((m, c) => Math.max(m, c.order ?? 0), 0), [items]);
 
@@ -184,7 +186,7 @@ function AdminCategoriesPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-4 sm:py-10 md:px-8">
+    <div dir="rtl" className="admin-rtl mx-auto w-full max-w-6xl px-3 py-6 sm:px-4 sm:py-10 md:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold">{t("adminCategories.title")}</h1>
@@ -198,7 +200,7 @@ function AdminCategoriesPage() {
 
       <div className="mt-8">
         {categoriesQuery.isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-44 rounded-xl" />
             ))}
@@ -213,8 +215,8 @@ function AdminCategoriesPage() {
             </Button>
           </div>
         ) : (
-          <ul className="grid list-none gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((c) => (
+          <ul dir="rtl" className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {page.items.map((c) => (
               <li key={c.id}>
                 <Card
                   className={cn(
@@ -257,10 +259,19 @@ function AdminCategoriesPage() {
             ))}
           </ul>
         )}
+        {items.length > 0 ? (
+          <AdminPager
+            className="mt-4 rounded-xl border border-border/60 bg-card shadow-card"
+            page={page.page}
+            pageCount={page.pageCount}
+            total={page.total}
+            onPageChange={page.setPage}
+          />
+        ) : null}
       </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle>{t("adminCategories.createTitle")}</DialogTitle>
           </DialogHeader>
@@ -319,7 +330,7 @@ function AdminCategoriesPage() {
           if (!v) setEditing(null);
         }}
       >
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle>{t("adminCategories.editTitle")}</DialogTitle>
           </DialogHeader>

@@ -12,6 +12,7 @@ import { formatCardDisplay, parseProfileContactForm, profileContactToForm } from
 import { levelFromPoints } from "@/lib/gamification";
 import { PHONE_REQUIRED_MIN_LEVEL } from "@/lib/points";
 import { useUserProfile } from "@/hooks/api";
+import { PersianDatePicker } from "@/components/PersianDatePicker";
 
 type ProfileContactFormProps = {
   user: AuthUser;
@@ -130,14 +131,14 @@ export function ProfileContactForm({ user, onSaved }: ProfileContactFormProps) {
 
         <div className="grid gap-2">
           <Label htmlFor="birthDate">تاریخ تولد</Label>
-          <Input
+          <PersianDatePicker
             id="birthDate"
-            type="date"
-            dir="ltr"
-            className="text-start"
             value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
+            onChange={setBirthDate}
+            placeholder="انتخاب از تقویم شمسی"
+            disableFuture
           />
+          <p className="text-xs text-muted-foreground">تاریخ را از تقویم شمسی انتخاب کنید.</p>
         </div>
 
         <Button type="submit" variant="hero" disabled={updateProfile.isPending} className="w-full sm:w-auto">

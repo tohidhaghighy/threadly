@@ -1,4 +1,4 @@
-import { api, type UserLeaderboardItem, type UserPointsEvent, type UserProfile, type UserProfileContact } from "@/lib/api";
+import { api, type UserAlertItem, type UserLeaderboardItem, type UserPointsEvent, type UserProfile, type UserProfileContact } from "@/lib/api";
 
 export function fetchAvatarSamples() {
   return api<{ items: { url: string }[] }>("/api/users/avatar-samples");
@@ -43,5 +43,12 @@ export function fetchUserProfile(id: string) {
 export function fetchUserPointsEvents(id: string, limit = 100) {
   return api<{ items: UserPointsEvent[]; nextCursor: string | null }>(
     `/api/users/${id}/points-events?limit=${limit}`,
+  );
+}
+
+export function fetchMyAlerts(limit = 200) {
+  return api<{ items: UserAlertItem[]; nextCursor: string | null }>(
+    `/api/users/me/alerts?limit=${limit}`,
+    { auth: true },
   );
 }

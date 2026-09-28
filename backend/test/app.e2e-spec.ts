@@ -576,17 +576,24 @@ describe("Threadly API (e2e)", () => {
       .send({ content: "A2" })
       .expect(201);
 
-    // B reacts 5 times (5 pts) - toggle same emoji would add/remove, so use different emojis
-    const emojis = ["👍", "👎", "❤️", "🔥", "🎉"];
-    for (const e of emojis) {
-      await request(app.getHttpServer())
-        .post(`/api/replies/${replyId}/reactions`)
-        .set(bearer(bToken))
-        .send({ emoji: e })
-        .expect(201);
-    }
+    // B can keep only one reaction on the thread; a different emoji replaces it (1 pt)
+    await request(app.getHttpServer())
+      .post(`/api/replies/${replyId}/reactions`)
+      .set(bearer(bToken))
+      .send({ emoji: "👍" })
+      .expect(201);
+    const changed = await request(app.getHttpServer())
+      .post(`/api/replies/${replyId}/reactions`)
+      .set(bearer(bToken))
+      .send({ emoji: "❤️" })
+      .expect(201);
+    expect(changed.body.action).toBe("changed");
+    expect(changed.body.reactions.some((x: any) => x.emoji === "👍")).toBe(false);
+    expect(changed.body.reactions.some((x: any) => x.emoji === "❤️" && x.reactedByMe === true && x.count === 1)).toBe(
+      true,
+    );
 
-    // leaderboard: A should be above B (A=6, B=5)
+    // leaderboard: A should be above B (A=6, B=1)
     const lb = await request(app.getHttpServer()).get("/api/users/leaderboard?limit=10").expect(200);
     const items = lb.body.items as any[];
     const aRow = items.find((x) => x.id === aId);
@@ -606,8 +613,8 @@ describe("Threadly API (e2e)", () => {
     expect(pA.body.breakdown.comments).toBe(2);
 
     const pB = await request(app.getHttpServer()).get(`/api/users/${bId}/profile`).expect(200);
-    expect(pB.body.points).toBe(5);
-    expect(pB.body.breakdown.reactions).toBe(5);
+    expect(pB.body.points).toBe(1);
+    expect(pB.body.breakdown.reactions).toBe(1);
   });
 
   it("admin user management: list users, set role, ban", async () => {

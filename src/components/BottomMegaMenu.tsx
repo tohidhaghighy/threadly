@@ -1,15 +1,13 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Download,
-  Globe,
   Grid2X2,
+  Globe,
   HelpCircle,
   Home,
   MessageSquare,
   MessageSquareText,
   PlusCircle,
-  Settings,
   ShieldCheck,
   Tags,
   Users,
@@ -62,9 +60,19 @@ export function BottomMegaMenu() {
     requestAnimationFrame(() => setVisible(true));
   };
 
+  /** Dismiss immediately so the overlay cannot block the next page. */
+  const forceCloseMenu = () => {
+    setVisible(false);
+    setLeaving(false);
+    setOpen(false);
+    document.body.style.overflow = "";
+  };
+
   const closeMenu = () => {
+    if (!open) return;
     setVisible(false);
     setLeaving(true);
+    document.body.style.overflow = "";
   };
 
   useEffect(() => {
@@ -86,13 +94,14 @@ export function BottomMegaMenu() {
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prev || "";
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Close mega panel on route change
+  // Close mega panel on route change (drop overlay immediately)
   useEffect(() => {
-    if (open) closeMenu();
+    forceCloseMenu();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
@@ -110,29 +119,24 @@ export function BottomMegaMenu() {
     { key: "users", label: t("nav.users"), icon: Users, to: "/users" },
     {
       key: "menu",
-      label: t("nav.megaMenu"),
+      label: t("nav.categories"),
       icon: open ? X : Grid2X2,
       onClick: () => (open ? closeMenu() : openMenu()),
     },
   ];
 
-  const quickLinks = [
-    { title: t("nav.install"), url: "/install", icon: Download, hint: t("nav.megaInstallHint") },
-    { title: t("nav.settings"), url: "/settings", icon: Settings, hint: t("nav.megaSettingsHint") },
-    { title: t("nav.newThread"), url: "/new", icon: PlusCircle, hint: t("nav.megaNewHint") },
-  ];
-
-  const adminLinks = [
-    { title: t("nav.admin"), url: "/admin", icon: ShieldCheck },
-    { title: "دسته‌بندی‌ها", url: "/admin/categories", icon: Tags },
-    { title: "SEO صفحات", url: "/admin/seo", icon: Globe },
-    { title: "کامنت‌ها", url: "/admin/comments", icon: MessageSquareText },
-  ];
-
   return (
     <>
       {open ? (
-        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <div
+          className={cn(
+            "fixed inset-0 z-50 md:hidden",
+            leaving && "pointer-events-none",
+          )}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+        >
           <button
             type="button"
             aria-label={t("nav.megaClose")}
@@ -150,13 +154,13 @@ export function BottomMegaMenu() {
               visible && !leaving ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
             )}
           >
-            <div className="mega-panel overflow-hidden rounded-3xl border border-border/60 bg-card/95 shadow-glow backdrop-blur-xl">
+            <div className="mega-panel glass-strong border-gradient overflow-hidden rounded-3xl border border-border/60 shadow-glow">
               <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-5">
                 <div className="min-w-0">
                   <h2 id={titleId} className="text-base font-extrabold sm:text-lg">
-                    {t("nav.megaTitle")}
+                    {t("nav.categories")}
                   </h2>
-                  <p className="text-xs text-muted-foreground sm:text-sm">{t("nav.megaDesc")}</p>
+                  <p className="text-xs text-muted-foreground sm:text-sm">یک دسته‌بندی را برای مرور گفتگوها انتخاب کنید</p>
                 </div>
                 <button
                   type="button"
@@ -169,24 +173,7 @@ export function BottomMegaMenu() {
               </div>
 
               <div className="max-h-[min(62vh,34rem)] space-y-5 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 sm:py-5">
-                <MegaSection title={t("nav.quickLinks")} delay={0} leaving={leaving}>
-                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                    {quickLinks.map((item, i) => (
-                      <MegaCard
-                        key={item.url}
-                        to={item.url}
-                        title={item.title}
-                        hint={item.hint}
-                        icon={<item.icon className="h-5 w-5" />}
-                        delayMs={40 + i * 45}
-                        leaving={leaving}
-                        onNavigate={closeMenu}
-                      />
-                    ))}
-                  </div>
-                </MegaSection>
-
-                <MegaSection title={t("nav.categories")} delay={80} leaving={leaving}>
+                <MegaSection title={t("nav.categories")} delay={0} leaving={leaving}>
                   <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
                     {categories.map((cat, i) => {
                       const Icon = iconByTitle.get(cat.title) ?? HelpCircle;
@@ -195,14 +182,14 @@ export function BottomMegaMenu() {
                         <MegaCard
                           key={cat.id}
                           to="/threads"
-                          search={{ category: cat.title }}
+                          search={{ q: "", category: cat.title }}
                           title={cat.title}
                           hint={`${cat.threadsCount.toLocaleString("fa-IR")} ${t("nav.threads")}`}
                           icon={<Icon className="h-5 w-5" />}
                           gradient={color}
                           delayMs={90 + i * 40}
                           leaving={leaving}
-                          onNavigate={closeMenu}
+                          onNavigate={forceCloseMenu}
                         />
                       );
                     })}
@@ -213,17 +200,23 @@ export function BottomMegaMenu() {
                 </MegaSection>
 
                 {auth.isAdmin ? (
-                  <MegaSection title={t("nav.admin")} delay={140} leaving={leaving}>
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                      {adminLinks.map((item, i) => (
+                  <MegaSection title={t("nav.admin")} delay={80} leaving={leaving}>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {[
+                        { to: "/admin", title: t("nav.adminPanel"), icon: ShieldCheck },
+                        { to: "/admin/categories", title: t("nav.adminCategories"), icon: Tags },
+                        { to: "/admin/seo", title: t("nav.adminSeo"), icon: Globe },
+                        { to: "/admin/comments", title: t("nav.adminComments"), icon: MessageSquareText },
+                      ].map((item, i) => (
                         <MegaCard
-                          key={item.url}
-                          to={item.url}
+                          key={item.to}
+                          to={item.to}
                           title={item.title}
                           icon={<item.icon className="h-5 w-5" />}
+                          gradient="from-primary/20 to-amber-500/10"
                           delayMs={120 + i * 40}
                           leaving={leaving}
-                          onNavigate={closeMenu}
+                          onNavigate={forceCloseMenu}
                         />
                       ))}
                     </div>
@@ -236,7 +229,7 @@ export function BottomMegaMenu() {
       ) : null}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-[60] border-t border-border/60 bg-background/95 pb-safe shadow-[0_-10px_40px_-18px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+        className="glass-strong fixed inset-x-0 bottom-0 z-[60] border-t border-border/60 pb-safe shadow-[0_-10px_40px_-18px_rgba(0,0,0,0.35)] md:hidden"
         aria-label={t("nav.navigation")}
       >
         <ul className="mx-auto grid h-[4.25rem] max-w-3xl grid-cols-5 items-end px-2 sm:px-4">
@@ -271,9 +264,10 @@ export function BottomMegaMenu() {
                 {item.to ? (
                   <Link
                     to={item.to}
+                    preload={false}
                     className={className}
                     onClick={() => {
-                      if (open) closeMenu();
+                      forceCloseMenu();
                     }}
                     aria-current={isActive ? "page" : undefined}
                   >
@@ -344,11 +338,11 @@ function MegaCard({
   return (
     <Link
       to={to}
-      // @ts-expect-error search is route-specific; category filter is valid for /threads
       search={search}
+      preload={false}
       onClick={onNavigate}
       className={cn(
-        "mega-card group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-card transition",
+        "mega-card group glass relative overflow-hidden rounded-2xl border border-border/60 p-3 shadow-card transition",
         "hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-glow",
         leaving ? "mega-card-out" : "mega-card-in",
       )}

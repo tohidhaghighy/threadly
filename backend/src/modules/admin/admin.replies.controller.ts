@@ -100,7 +100,12 @@ export class AdminRepliesController {
     },
   })
   @Get()
-  async list(@Query("threadId") threadId?: string, @Query("threadQ") threadQ?: string, @Query("q") q?: string) {
+  async list(
+    @Query("threadId") threadId?: string,
+    @Query("threadQ") threadQ?: string,
+    @Query("q") q?: string,
+    @Query("authorId") authorId?: string,
+  ) {
     const qb = this.repliesRepo
       .createQueryBuilder("r")
       .leftJoinAndSelect("r.author", "author")
@@ -109,6 +114,7 @@ export class AdminRepliesController {
     if (threadId) qb.where("thread.id = :threadId", { threadId });
     if (threadQ) qb.andWhere("LOWER(thread.title) LIKE :tq", { tq: `%${threadQ.toLowerCase()}%` });
     if (q) qb.andWhere("LOWER(r.content) LIKE :q", { q: `%${q.toLowerCase()}%` });
+    if (authorId) qb.andWhere("author.id = :authorId", { authorId });
 
     qb.orderBy("r.createdAt", "DESC").limit(100);
 

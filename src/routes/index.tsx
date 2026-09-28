@@ -151,9 +151,10 @@ function Index() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
-      <AnimatedSection className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-card sm:rounded-3xl sm:p-8 md:p-12">
+      <AnimatedSection className="border-gradient glass-strong relative overflow-hidden rounded-2xl border border-border/60 p-5 shadow-card sm:rounded-3xl sm:p-8 md:p-12">
         <div className="absolute inset-0 bg-gradient-primary opacity-10" />
-        <div className="absolute -end-20 -top-20 h-72 w-72 rounded-full bg-primary/30 blur-3xl" />
+        <div className="animate-float absolute -end-20 -top-20 h-72 w-72 rounded-full bg-primary/30 blur-3xl" />
+        <div className="animate-float absolute -bottom-24 -start-16 h-64 w-64 rounded-full bg-primary-glow/25 blur-3xl [animation-delay:-3s]" />
         <div className="relative">
           {loading ? (
             <div className="space-y-5">
@@ -176,7 +177,9 @@ function Index() {
               <Badge className="bg-primary/20 text-primary border border-primary/30">
                 <Sparkles className="me-1 h-3 w-3" /> {t("home.badge")}
               </Badge>
-              <h1 className="mt-4 text-2xl font-extrabold leading-tight sm:text-3xl md:text-5xl">{t("home.title")}</h1>
+              <h1 className="animate-gradient-text mt-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-2xl font-extrabold leading-tight text-transparent sm:text-3xl md:text-5xl">
+                {t("home.title")}
+              </h1>
               <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base md:text-lg">{t("home.subtitle")}</p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button asChild variant="hero" size="lg" className="w-full sm:w-auto">
@@ -198,7 +201,7 @@ function Index() {
                   className="h-12 border-border/70 bg-background/70 shadow-sm"
                 />
                 {search.trim() ? (
-                  <div className="mt-3 rounded-2xl border border-border/60 bg-card/70 p-3 shadow-card">
+                  <div className="glass mt-3 rounded-2xl border border-border/60 p-3 shadow-card">
                     {search.trim().length < 2 ? (
                       <div className="text-sm text-muted-foreground">حداقل ۲ کاراکتر وارد کنید.</div>
                     ) : searchQuery.isLoading || searchQuery.isFetching ? (
@@ -302,14 +305,14 @@ function Index() {
                   key={cat.id}
                   to="/threads"
                   search={{ category: cat.title }}
-                  className="group relative animate-in fade-in slide-in-from-bottom-2 overflow-hidden rounded-2xl border border-border/60 bg-card p-6 shadow-card duration-500 transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-glow"
+                  className="group border-gradient glass tilt-3d relative animate-in fade-in slide-in-from-bottom-2 overflow-hidden rounded-2xl border border-border/60 p-6 shadow-card duration-500 hover:border-primary/50 hover:shadow-glow"
                   style={{ animationDelay: `${i * 40}ms` }}
                 >
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${color} opacity-50 transition-opacity group-hover:opacity-100`}
                   />
                   <div className="relative">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
                       {Icon ? <Icon className="h-6 w-6" /> : null}
                     </div>
                     <h3 className="mt-4 text-lg font-bold">{cat.title}</h3>
@@ -346,7 +349,7 @@ function Index() {
           </Button>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border/60 bg-card p-3 shadow-card sm:p-5">
+        <div className="glass mt-6 rounded-2xl border border-border/60 p-3 shadow-card sm:p-5">
           <Tabs defaultValue="newest" dir="rtl">
             <TabsList className="w-full">
               <TabsTrigger value="newest" className="flex-1 sm:flex-none">

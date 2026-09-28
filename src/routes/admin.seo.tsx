@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RichTextEditor } from "@/components/shared/rich-text";
+import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
 
 export const Route = createFileRoute("/admin/seo")({
   head: () => {
@@ -63,6 +64,7 @@ function AdminSeoPage() {
   const updateMut = useUpdateAdminPageSeo();
 
   const items = useMemo(() => pagesQuery.data?.items ?? [], [pagesQuery.data?.items]);
+  const page = useClientPage(items);
 
   const openEdit = (p: PageSeoItem) => {
     setEditing(p);
@@ -86,7 +88,7 @@ function AdminSeoPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
+    <div dir="rtl" className="admin-rtl mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       <Link
         to="/admin"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -105,7 +107,7 @@ function AdminSeoPage() {
       </div>
 
       <div className="mt-8 overflow-hidden rounded-xl border border-border/60 bg-card shadow-card">
-        <Table>
+        <Table mobileStack dir="rtl">
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
               <TableHead className="text-start">صفحه</TableHead>
@@ -124,9 +126,9 @@ function AdminSeoPage() {
                     </TableCell>
                   </TableRow>
                 ))
-              : items.map((p) => (
+              : page.items.map((p) => (
                   <TableRow key={p.pageKey} className="hover:bg-muted/30">
-                    <TableCell>
+                    <TableCell data-label="صفحه">
                       <div className="font-semibold">{p.label}</div>
                       {p.noindex ? (
                         <Badge variant="outline" className="mt-1 text-xs">
@@ -134,11 +136,11 @@ function AdminSeoPage() {
                         </Badge>
                       ) : null}
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{p.path}</TableCell>
-                    <TableCell className="max-w-xs">
+                    <TableCell data-label="مسیر" className="font-mono text-xs text-muted-foreground">{p.path}</TableCell>
+                    <TableCell data-label="توضیحات" className="max-w-xs">
                       <p className="line-clamp-2 text-sm text-muted-foreground">{p.description}</p>
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="برچسب‌ها">
                       <div className="flex flex-wrap gap-1">
                         {p.keywords.slice(0, 4).map((k) => (
                           <Badge key={k} variant="secondary" className="text-[10px]">
@@ -152,8 +154,8 @@ function AdminSeoPage() {
                         ) : null}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end">
+                    <TableCell data-label="عملیات">
+                      <div className="flex justify-start sm:justify-end">
                         <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
                           <Pencil className="h-4 w-4" /> ویرایش
                         </Button>
@@ -163,10 +165,16 @@ function AdminSeoPage() {
                 ))}
           </TableBody>
         </Table>
+        <AdminPager
+          page={page.page}
+          pageCount={page.pageCount}
+          total={page.total}
+          onPageChange={page.setPage}
+        />
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-2xl" dir="rtl">
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle>ویرایش SEO — {editing?.label}</DialogTitle>
           </DialogHeader>

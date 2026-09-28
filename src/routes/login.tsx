@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -42,6 +43,15 @@ function LoginPage() {
   const auth = useAuth();
   const { t } = useI18n();
 
+  // Redirect to the home page after the auth token is committed. Running this in
+  // an effect (rather than inline in the submit handler) fires after the auth
+  // state settles, avoiding the race with the root's auth-route branch swap.
+  // It also bounces already-signed-in users away from /login.
+  useEffect(() => {
+    if (!auth.token) return;
+    void navigate({ to: "/", replace: true });
+  }, [auth.token, navigate]);
+
   const loginSchema = z.object({
     email: z.string().email(t("auth.errorInvalidEmail")),
     password: z.string().min(6, t("auth.errorPasswordMin")),
@@ -56,7 +66,7 @@ function LoginPage() {
     try {
       await auth.login(values.email, values.password);
       toast.success(t("auth.toastSignedIn"));
-      await navigate({ to: "/" });
+      // Navigation is handled by the auth-state effect above once the token is set.
     } catch (e) {
       const err = e as ApiError;
       if (err?.status === 401) toast.error(t("auth.errorInvalidCredentials"));

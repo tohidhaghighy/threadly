@@ -13,6 +13,9 @@ import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { PwaRegister } from "@/components/PwaRegister";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import { BottomMegaMenu } from "@/components/BottomMegaMenu";
+import { Background3D } from "@/components/Background3D";
+import { RouteProgress } from "@/components/RouteProgress";
+import { NewThreadNotice } from "@/components/NewThreadNotice";
 
 const GTM_ID = "GTM-MZ6KVF7C";
 const GTM_HEAD_SCRIPT = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -27,7 +30,7 @@ function SiteFooter() {
   const marker = "Threadly";
   const i = line.lastIndexOf(marker);
   return (
-    <footer className="border-t border-border/60 bg-background/60 px-4 py-4 text-center text-xs text-muted-foreground md:px-6">
+    <footer className="glass border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground md:px-6">
       {i === -1 ? (
         line
       ) : (
@@ -72,6 +75,8 @@ const ROOT_DESCRIPTION =
   "انجمن گفتگوی فاطر برای سازندگان کیس: پرسش، اشتراک اسمبل و پاسخ از جامعهٔ کاربران فاطر.";
 
 export const Route = createRootRoute({
+  // Helps TanStack show pending transitions reliably across child routes.
+  loader: () => null,
   head: () => {
     const seo = buildSeo({
       titleAbsolute: "انجمن فاطر — گفتگو",
@@ -144,39 +149,45 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAuthRoute = pathname === "/login" || pathname === "/register";
 
-  // Keep Auth/Query/I18n mounted across login ↔ app so the session is not lost on navigate.
+  // Keep Auth/Query/I18n (and a single Outlet) mounted across login ↔ app so
+  // session + in-flight navigations are not torn down mid-transition.
   return (
     <AppQueryProvider>
       <AuthProvider>
         <I18nProvider>
-          {isAuthRoute ? (
-            <div className="relative z-10 min-h-screen overflow-x-clip">
+          <Background3D />
+          <RouteProgress />
+          <NewThreadNotice />
+          <div
+            className={
+              isAuthRoute
+                ? "relative z-10 min-h-screen overflow-x-clip"
+                : "relative z-10 flex min-h-screen w-full flex-col overflow-x-clip pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:pb-0"
+            }
+          >
+            {!isAuthRoute ? (
+              <div className="glass-strong sticky top-0 z-40 border-b border-border/60 shadow-sm">
+                <ForumTopBanner />
+                <AppHeader />
+                <PhoneRequiredBanner />
+              </div>
+            ) : (
               <ForumTopBanner />
+            )}
+            <main className={isAuthRoute ? undefined : "min-w-0 flex-1 overflow-x-clip"}>
               <Outlet />
-              <Toaster />
-              <PwaInstallBanner />
-              <PwaRegister />
-            </div>
-          ) : (
-            <>
-              <div className="relative z-10 flex min-h-screen w-full flex-col overflow-x-clip pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))]">
-                <div className="sticky top-0 z-40 border-b border-border/60 bg-background/90 shadow-sm backdrop-blur-xl">
-                  <ForumTopBanner />
-                  <AppHeader />
-                  <PhoneRequiredBanner />
-                </div>
-                <main className="min-w-0 flex-1 overflow-x-clip">
-                  <Outlet />
-                </main>
+            </main>
+            {!isAuthRoute ? (
+              <>
                 <SiteSeoBlurb />
                 <SiteFooter />
-              </div>
-              <BottomMegaMenu />
-              <Toaster />
-              <PwaInstallBanner />
-              <PwaRegister />
-            </>
-          )}
+              </>
+            ) : null}
+          </div>
+          {!isAuthRoute ? <BottomMegaMenu /> : null}
+          <Toaster />
+          <PwaInstallBanner />
+          <PwaRegister />
         </I18nProvider>
       </AuthProvider>
     </AppQueryProvider>

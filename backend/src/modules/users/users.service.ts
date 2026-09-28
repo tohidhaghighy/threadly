@@ -328,7 +328,7 @@ export class UsersService {
 
   async alertsForUser(userId: string, input?: { limit?: string }) {
     const user = await this.findById(userId);
-    const limit = Math.min(Math.max(Number(input?.limit ?? "20") || 20, 1), 50);
+    const limit = Math.min(Math.max(Number(input?.limit ?? "20") || 20, 1), 200);
     const lowerName = (user.name ?? "").trim().toLowerCase();
     const mentionNeedle = lowerName ? `@${lowerName}` : "";
 
