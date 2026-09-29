@@ -16,6 +16,7 @@ COPY . .
 RUN npm --prefix backend run build \
   && npm --prefix backend prune --omit=dev \
   && mkdir -p /app/backend/uploads \
+  && sed -i 's/\r$//' /app/docker/start.sh \
   && chmod +x /app/docker/start.sh
 
 ENV PORT=4050
