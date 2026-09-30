@@ -10,7 +10,7 @@ node dist/main.js &
 backend_pid=$!
 
 cd /app
-npx vite dev --host 0.0.0.0 --port "${WEB_PORT}" --strictPort &
+HOST=0.0.0.0 PORT="${WEB_PORT}" node .output/server/index.mjs &
 frontend_pid=$!
 
 cleanup() {

@@ -9,70 +9,30 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UsersRouteImport } from './routes/users'
-import { Route as ThreadsRouteImport } from './routes/threads'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as NewRouteImport } from './routes/new'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as InstallRouteImport } from './routes/install'
-import { Route as ChangePasswordRouteImport } from './routes/change-password'
-import { Route as AlertsRouteImport } from './routes/alerts'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UsersIndexRouteImport } from './routes/users.index'
-import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
-import { Route as SettingsIndexRouteImport } from './routes/settings.index'
-import { Route as UsersIdRouteImport } from './routes/users.$id'
-import { Route as ThreadsIdRouteImport } from './routes/threads.$id'
-import { Route as AdminSeoRouteImport } from './routes/admin.seo'
-import { Route as AdminCommentsRouteImport } from './routes/admin.comments'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as ChangePasswordRouteImport } from './routes/change-password'
+import { Route as InstallRouteImport } from './routes/install'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as NewRouteImport } from './routes/new'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ThreadsRouteImport } from './routes/threads'
+import { Route as UsersRouteImport } from './routes/users'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
+import { Route as AdminCommentsRouteImport } from './routes/admin.comments'
+import { Route as AdminSeoRouteImport } from './routes/admin.seo'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
+import { Route as ThreadsIdRouteImport } from './routes/threads.$id'
+import { Route as UsersIndexRouteImport } from './routes/users.index'
+import { Route as UsersIdRouteImport } from './routes/users.$id'
 import { Route as AdminUsersIdRouteImport } from './routes/admin.users.$id'
 
-const UsersRoute = UsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ThreadsRoute = ThreadsRouteImport.update({
-  id: '/threads',
-  path: '/threads',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NewRoute = NewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InstallRoute = InstallRouteImport.update({
-  id: '/install',
-  path: '/install',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangePasswordRoute = ChangePasswordRouteImport.update({
-  id: '/change-password',
-  path: '/change-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlertsRoute = AlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -80,39 +40,54 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UsersIndexRoute = UsersIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => UsersRoute,
+const ChangePasswordRoute = ChangePasswordRouteImport.update({
+  id: '/change-password',
+  path: '/change-password',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ThreadsIndexRoute = ThreadsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ThreadsRoute,
+const InstallRoute = InstallRouteImport.update({
+  id: '/install',
+  path: '/install',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsIndexRoute = SettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SettingsRoute,
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const UsersIdRoute = UsersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => UsersRoute,
+const NewRoute = NewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ThreadsIdRoute = ThreadsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ThreadsRoute,
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSeoRoute = AdminSeoRouteImport.update({
-  id: '/seo',
-  path: '/seo',
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThreadsRoute = ThreadsRouteImport.update({
+  id: '/threads',
+  path: '/threads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCommentsRoute = AdminCommentsRouteImport.update({
@@ -120,10 +95,35 @@ const AdminCommentsRoute = AdminCommentsRouteImport.update({
   path: '/comments',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
-  id: '/categories',
-  path: '/categories',
+const AdminSeoRoute = AdminSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
   getParentRoute: () => AdminRoute,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const ThreadsIndexRoute = ThreadsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ThreadsRoute,
+} as any)
+const ThreadsIdRoute = ThreadsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ThreadsRoute,
+} as any)
+const UsersIndexRoute = UsersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UsersRoute,
+} as any)
+const UsersIdRoute = UsersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => UsersRoute,
 } as any)
 const AdminUsersIdRoute = AdminUsersIdRouteImport.update({
   id: '/users/$id',
@@ -277,67 +277,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/users': {
-      id: '/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof UsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/threads': {
-      id: '/threads'
-      path: '/threads'
-      fullPath: '/threads'
-      preLoaderRoute: typeof ThreadsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/new': {
-      id: '/new'
-      path: '/new'
-      fullPath: '/new'
-      preLoaderRoute: typeof NewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/install': {
-      id: '/install'
-      path: '/install'
-      fullPath: '/install'
-      preLoaderRoute: typeof InstallRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/change-password': {
-      id: '/change-password'
-      path: '/change-password'
-      fullPath: '/change-password'
-      preLoaderRoute: typeof ChangePasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/alerts': {
-      id: '/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AlertsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -347,53 +291,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/users/': {
-      id: '/users/'
-      path: '/'
-      fullPath: '/users/'
-      preLoaderRoute: typeof UsersIndexRouteImport
-      parentRoute: typeof UsersRoute
+    '/change-password': {
+      id: '/change-password'
+      path: '/change-password'
+      fullPath: '/change-password'
+      preLoaderRoute: typeof ChangePasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/threads/': {
-      id: '/threads/'
-      path: '/'
-      fullPath: '/threads/'
-      preLoaderRoute: typeof ThreadsIndexRouteImport
-      parentRoute: typeof ThreadsRoute
+    '/install': {
+      id: '/install'
+      path: '/install'
+      fullPath: '/install'
+      preLoaderRoute: typeof InstallRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/settings/': {
-      id: '/settings/'
-      path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof SettingsRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/users/$id': {
-      id: '/users/$id'
-      path: '/$id'
-      fullPath: '/users/$id'
-      preLoaderRoute: typeof UsersIdRouteImport
-      parentRoute: typeof UsersRoute
+    '/new': {
+      id: '/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof NewRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/threads/$id': {
-      id: '/threads/$id'
-      path: '/$id'
-      fullPath: '/threads/$id'
-      preLoaderRoute: typeof ThreadsIdRouteImport
-      parentRoute: typeof ThreadsRoute
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/seo': {
-      id: '/admin/seo'
-      path: '/seo'
-      fullPath: '/admin/seo'
-      preLoaderRoute: typeof AdminSeoRouteImport
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/threads': {
+      id: '/threads'
+      path: '/threads'
+      fullPath: '/threads'
+      preLoaderRoute: typeof ThreadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/categories': {
+      id: '/admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AdminCategoriesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/comments': {
@@ -403,12 +368,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCommentsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/categories': {
-      id: '/admin/categories'
-      path: '/categories'
-      fullPath: '/admin/categories'
-      preLoaderRoute: typeof AdminCategoriesRouteImport
+    '/admin/seo': {
+      id: '/admin/seo'
+      path: '/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AdminSeoRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/threads/': {
+      id: '/threads/'
+      path: '/'
+      fullPath: '/threads/'
+      preLoaderRoute: typeof ThreadsIndexRouteImport
+      parentRoute: typeof ThreadsRoute
+    }
+    '/threads/$id': {
+      id: '/threads/$id'
+      path: '/$id'
+      fullPath: '/threads/$id'
+      preLoaderRoute: typeof ThreadsIdRouteImport
+      parentRoute: typeof ThreadsRoute
+    }
+    '/users/': {
+      id: '/users/'
+      path: '/'
+      fullPath: '/users/'
+      preLoaderRoute: typeof UsersIndexRouteImport
+      parentRoute: typeof UsersRoute
+    }
+    '/users/$id': {
+      id: '/users/$id'
+      path: '/$id'
+      fullPath: '/users/$id'
+      preLoaderRoute: typeof UsersIdRouteImport
+      parentRoute: typeof UsersRoute
     }
     '/admin/users/$id': {
       id: '/admin/users/$id'
