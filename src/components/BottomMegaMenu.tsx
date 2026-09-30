@@ -267,7 +267,9 @@ export function BottomMegaMenu() {
                     preload={false}
                     className={className}
                     onClick={() => {
-                      forceCloseMenu();
+                      // Unmounting this dock in the same commit as the route change
+                      // can abort the navigation (removeChild on a detached node).
+                      window.setTimeout(forceCloseMenu, 0);
                     }}
                     aria-current={isActive ? "page" : undefined}
                   >
@@ -340,7 +342,9 @@ function MegaCard({
       to={to}
       search={search}
       preload={false}
-      onClick={onNavigate}
+      onClick={() => {
+        window.setTimeout(onNavigate, 0);
+      }}
       className={cn(
         "mega-card group glass relative overflow-hidden rounded-2xl border border-border/60 p-3 shadow-card transition",
         "hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-glow",

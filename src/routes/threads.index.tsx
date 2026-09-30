@@ -13,7 +13,12 @@ import { formatDistanceToNow } from "date-fns";
 import { useCategories } from "@/lib/categories";
 import { buildSeo, useSeo } from "@/lib/seo";
 import { getCategorySeoCopy } from "@/lib/seo-content";
-import { buildCategoryCollectionJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo-schema";
+import {
+  buildBreadcrumbJsonLd,
+  buildCategoriesItemListJsonLd,
+  buildCategoryCollectionJsonLd,
+  buildThreadsItemListJsonLd,
+} from "@/lib/seo-schema";
 import { PAGE_SEO_KEYS, pageSeoToInput, usePageSeo } from "@/lib/page-seo";
 
 export const Route = createFileRoute("/threads/")({
@@ -51,9 +56,38 @@ function ThreadsPage() {
     return { ...getCategorySeoCopy(activeCat, cat?.description), keywords: cat?.seoKeywords ?? [] };
   }, [activeCat, categories]);
 
+  const { data } = useQuery({
+    queryKey: ["threads", { activeFilter, activeCat, q }],
+    queryFn: async () => {
+      const sort = activeFilter === "محبوب‌ترین" ? "top" : activeFilter === "جدیدترین" ? "new" : "new";
+      const qs = new URLSearchParams();
+      if (activeCat) qs.set("category", activeCat);
+      if (q.trim()) qs.set("q", q.trim());
+      qs.set("sort", sort);
+      return api<{ items: ThreadListItem[]; nextCursor: string | null }>(`/api/threads?${qs.toString()}`);
+    },
+  });
+
+  const threads = useMemo(() => data?.items ?? [], [data?.items]);
+
   const seoInput = useMemo(() => {
+    const threadItems = threads.map((t) => ({
+      id: t.id,
+      title: t.title,
+      excerpt: t.excerpt,
+      category: t.category,
+      createdAt: t.createdAt,
+      author: { displayName: t.author.displayName },
+      counts: t.counts,
+    }));
+    const categoryItems = categories.map((cat) => ({
+      title: cat.title,
+      description: getCategorySeoCopy(cat.title, cat.description).short,
+      threadsCount: cat.threadsCount,
+    }));
     if (activeCat && activeCategoryMeta) {
       const path = `/threads?category=${encodeURIComponent(activeCat)}`;
+      const cat = categories.find((c) => c.title === activeCat);
       return {
         title: `گفتگوهای ${activeCat}`,
         description: activeCategoryMeta.short,
@@ -64,6 +98,8 @@ function ThreadsPage() {
             title: `گفتگوهای ${activeCat}`,
             description: activeCategoryMeta.long,
             path,
+            threadsCount: cat?.threadsCount,
+            threads: threadItems,
           }),
           buildBreadcrumbJsonLd([
             { name: "خانه", path: "/" },
@@ -80,8 +116,13 @@ function ThreadsPage() {
           description: "مرور سوال‌ها و گفتگوهای تأیید شده در انجمن فاطر.",
           path: "/threads",
         };
-    return base;
-  }, [activeCat, activeCategoryMeta, threadsPageSeo.data]);
+    const categoriesLd = buildCategoriesItemListJsonLd(categoryItems);
+    const threadsLd = buildThreadsItemListJsonLd(threadItems, { name: "گفتگوها", path: "/threads" });
+    return {
+      ...base,
+      jsonLd: [categoriesLd, threadsLd].filter((item) => item != null),
+    };
+  }, [activeCat, activeCategoryMeta, threadsPageSeo.data, threads, categories]);
 
   useSeo(seoInput);
 
@@ -91,19 +132,6 @@ function ThreadsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.q, search.category]);
 
-  const { data } = useQuery({
-    queryKey: ["threads", { activeFilter, activeCat, q }],
-    queryFn: async () => {
-      const sort = activeFilter === "محبوب‌ترین" ? "top" : activeFilter === "جدیدترین" ? "new" : "new";
-      const qs = new URLSearchParams();
-      if (activeCat) qs.set("category", activeCat);
-      if (q.trim()) qs.set("q", q.trim());
-      qs.set("sort", sort);
-      return api<{ items: ThreadListItem[]; nextCursor: string | null }>(`/api/threads?${qs.toString()}`);
-    },
-  });
-
-  const threads = useMemo(() => data?.items ?? [], [data?.items]);
   const cards = useMemo(
     () =>
       threads.map((t) => ({

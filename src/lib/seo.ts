@@ -188,8 +188,13 @@ export function useSeo(input: SeoInput | null | undefined) {
       else if (m.property) upsertMeta(m.property, "property", m.content);
     }
 
-    // Remove old alternate hreflang then re-add
-    document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove());
+    // Only drop alternates this hook created. Route `head()` links are React 19
+    // hoistable resources; removing those leaves parentNode null, and the next
+    // navigation throws "Cannot read properties of null (reading 'removeChild')"
+    // so the new page never commits.
+    document.head
+      .querySelectorAll('link[rel="alternate"][hreflang][data-seo="route"]')
+      .forEach((el) => el.remove());
 
     for (const l of tags.links) {
       if (l.rel === "canonical") {
@@ -197,17 +202,24 @@ export function useSeo(input: SeoInput | null | undefined) {
         if (!el) {
           el = document.createElement("link");
           el.rel = "canonical";
+          el.dataset.seo = "route";
           document.head.appendChild(el);
         }
         el.href = l.href;
         continue;
       }
       if (l.rel === "alternate" && l.hrefLang) {
-        const el = document.createElement("link");
-        el.rel = "alternate";
-        el.hreflang = l.hrefLang;
+        let el = document.head.querySelector<HTMLLinkElement>(
+          `link[rel="alternate"][hreflang="${l.hrefLang}"]`,
+        );
+        if (!el) {
+          el = document.createElement("link");
+          el.rel = "alternate";
+          el.hreflang = l.hrefLang;
+          el.dataset.seo = "route";
+          document.head.appendChild(el);
+        }
         el.href = l.href;
-        document.head.appendChild(el);
       }
     }
 

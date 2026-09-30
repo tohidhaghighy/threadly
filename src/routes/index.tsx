@@ -15,10 +15,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api, type ThreadListItem } from "@/lib/api";
 import { useCategories } from "@/lib/categories";
-import { buildSeo } from "@/lib/seo";
-import { buildOrganizationJsonLd, buildWebSiteJsonLd } from "@/lib/seo-schema";
+import { buildSeo, useSeo } from "@/lib/seo";
+import {
+  buildCategoriesItemListJsonLd,
+  buildOrganizationJsonLd,
+  buildThreadsItemListJsonLd,
+  buildWebSiteJsonLd,
+} from "@/lib/seo-schema";
+import { PAGE_SEO_KEYS, pageSeoToInput, usePageSeo } from "@/lib/page-seo";
 import { getCategorySeoCopy, HOME_SEO_META } from "@/lib/seo-content";
-import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
@@ -37,13 +42,6 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { t } = useI18n();
-  useStaticPageSeo(PAGE_SEO_KEYS.home, {
-    titleAbsolute: "انجمن فاطر — گفتگو و ساخت کیس",
-    description: HOME_SEO_META,
-    path: "/",
-    type: "website",
-    jsonLd: [buildWebSiteJsonLd(), buildOrganizationJsonLd()],
-  });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -91,6 +89,53 @@ function Index() {
     queryKey: ["home", "replies"],
     queryFn: () => api<{ items: ThreadListItem[]; nextCursor: string | null }>("/api/threads?sort=replies"),
   });
+
+  const homePageSeo = usePageSeo(PAGE_SEO_KEYS.home);
+  const homeSeoInput = useMemo(() => {
+    const base = homePageSeo.data
+      ? pageSeoToInput(homePageSeo.data, { type: "website" })
+      : {
+          titleAbsolute: "انجمن فاطر — گفتگو و ساخت کیس",
+          description: HOME_SEO_META,
+          path: "/",
+          type: "website" as const,
+        };
+    const seen = new Set<string>();
+    const threadItems: ThreadListItem[] = [];
+    const pushThreads = (items: ThreadListItem[] | undefined) => {
+      for (const item of items ?? []) {
+        if (seen.has(item.id) || threadItems.length >= 20) continue;
+        seen.add(item.id);
+        threadItems.push(item);
+      }
+    };
+    pushThreads(newestQuery.data?.pages?.[0]?.items);
+    pushThreads(hotQuery.data?.items);
+    pushThreads(viewsQuery.data?.items);
+    pushThreads(repliesQuery.data?.items);
+
+    const categoryItems = categories.map((cat) => ({
+      title: cat.title,
+      description: getCategorySeoCopy(cat.title, cat.description).short,
+      threadsCount: cat.threadsCount,
+    }));
+    const categoriesLd = buildCategoriesItemListJsonLd(categoryItems);
+    const threadsLd = buildThreadsItemListJsonLd(threadItems, { name: "گفتگوهای انجمن", path: "/" });
+    return {
+      ...base,
+      jsonLd: [buildWebSiteJsonLd(), buildOrganizationJsonLd(), categoriesLd, threadsLd].filter(
+        (item) => item != null,
+      ),
+    };
+  }, [
+    homePageSeo.data,
+    categories,
+    newestQuery.data?.pages,
+    hotQuery.data?.items,
+    viewsQuery.data?.items,
+    repliesQuery.data?.items,
+  ]);
+  useSeo(homeSeoInput);
 
   const mapToCard = (t: ThreadListItem) => ({
     id: t.id,

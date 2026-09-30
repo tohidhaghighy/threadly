@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -42,13 +42,13 @@ function LoginPage() {
   const navigate = useNavigate();
   const auth = useAuth();
   const { t } = useI18n();
+  const submittedNavigation = useRef(false);
 
-  // Redirect to the home page after the auth token is committed. Running this in
-  // an effect (rather than inline in the submit handler) fires after the auth
-  // state settles, avoiding the race with the root's auth-route branch swap.
-  // It also bounces already-signed-in users away from /login.
+  // Already-signed-in visits bounce home. A submit handles its own navigation so
+  // a failed first attempt can be retried; this effect must not start a second
+  // navigation for that same sign-in.
   useEffect(() => {
-    if (!auth.token) return;
+    if (!auth.token || submittedNavigation.current) return;
     void navigate({ to: "/", replace: true });
   }, [auth.token, navigate]);
 
@@ -63,15 +63,18 @@ function LoginPage() {
   });
 
   const onSubmit = async (values: LoginValues) => {
+    submittedNavigation.current = true;
     try {
       await auth.login(values.email, values.password);
-      toast.success(t("auth.toastSignedIn"));
-      // Navigation is handled by the auth-state effect above once the token is set.
     } catch (e) {
+      submittedNavigation.current = false;
       const err = e as ApiError;
       if (err?.status === 401) toast.error(t("auth.errorInvalidCredentials"));
       else toast.error(err?.message ?? "Error");
+      return;
     }
+    toast.success(t("auth.toastSignedIn"));
+    await navigate({ to: "/", replace: true });
   };
 
   return (

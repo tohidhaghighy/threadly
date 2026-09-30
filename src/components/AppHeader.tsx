@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Moon, Sun, PlusCircle, User, LogOut, Settings, Bell, Download, Cpu, Home, MessageSquare, Users, Grid2X2, ShieldCheck, HelpCircle, X, ChevronDown, Tags, Globe, MessageSquareText } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ export function AppHeader() {
   const { t } = useI18n();
   const auth = useAuth();
   const dark = theme === "dark";
+  const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [desktopMega, setDesktopMega] = useState(false);
   const megaRef = useRef<HTMLDivElement | null>(null);
@@ -182,15 +183,17 @@ export function AppHeader() {
                 const active =
                   item.to === "/admin" ? pathname === "/admin" : pathname.startsWith(item.to);
                 return (
-                  <DropdownMenuItem asChild key={item.to} className={profileItemClass}>
-                    <Link
-                      to={item.to}
-                      preload={false}
-                      className={cn(active && "bg-primary/10 text-primary")}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      {t(item.labelKey)}
-                    </Link>
+                  <DropdownMenuItem
+                    key={item.to}
+                    className={cn(profileItemClass, active && "bg-primary/10 text-primary")}
+                    onSelect={() => {
+                      window.setTimeout(() => {
+                        void navigate({ to: item.to });
+                      }, 0);
+                    }}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {t(item.labelKey)}
                   </DropdownMenuItem>
                 );
               })}
@@ -243,7 +246,9 @@ export function AppHeader() {
                         to="/threads"
                         search={{ q: "", category: cat.title }}
                         preload={false}
-                        onClick={() => setDesktopMega(false)}
+                        onClick={() => {
+                          window.setTimeout(() => setDesktopMega(false), 0);
+                        }}
                         className="glass group relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-border/60 p-3 text-center shadow-card transition hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-glow"
                       >
                         <div className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br opacity-60 transition group-hover:opacity-100", color)} />
@@ -334,23 +339,39 @@ export function AppHeader() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className={profileItemClass}>
-              <Link to={auth.user ? "/users/$id" : "/login"} params={auth.user ? { id: auth.user.id } : undefined}>
-                <User className="h-4 w-4 shrink-0" />
-                {t("header.profile")}
-              </Link>
+            <DropdownMenuItem
+              className={profileItemClass}
+              onSelect={() => {
+                window.setTimeout(() => {
+                  if (auth.user) void navigate({ to: "/users/$id", params: { id: auth.user.id } });
+                  else void navigate({ to: "/login" });
+                }, 0);
+              }}
+            >
+              <User className="h-4 w-4 shrink-0" />
+              {t("header.profile")}
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className={profileItemClass}>
-              <Link to="/change-password">
-                <Settings className="h-4 w-4 shrink-0" />
-                تغییر رمز عبور
-              </Link>
+            <DropdownMenuItem
+              className={profileItemClass}
+              onSelect={() => {
+                window.setTimeout(() => {
+                  void navigate({ to: "/change-password" });
+                }, 0);
+              }}
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              تغییر رمز عبور
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className={profileItemClass}>
-              <Link to={auth.user ? "/settings" : "/login"}>
-                <Settings className="h-4 w-4 shrink-0" />
-                تنظیمات پروفایل
-              </Link>
+            <DropdownMenuItem
+              className={profileItemClass}
+              onSelect={() => {
+                window.setTimeout(() => {
+                  void navigate({ to: auth.user ? "/settings" : "/login" });
+                }, 0);
+              }}
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              تنظیمات پروفایل
             </DropdownMenuItem>
             {auth.isAdmin ? (
               <>
@@ -361,21 +382,32 @@ export function AppHeader() {
                 {adminNavLinks.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <DropdownMenuItem asChild key={item.to} className={profileItemClass}>
-                      <Link to={item.to} preload={false}>
-                        <Icon className="h-4 w-4 shrink-0" />
-                        {t(item.labelKey)}
-                      </Link>
+                    <DropdownMenuItem
+                      key={item.to}
+                      className={profileItemClass}
+                      onSelect={() => {
+                        window.setTimeout(() => {
+                          void navigate({ to: item.to });
+                        }, 0);
+                      }}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {t(item.labelKey)}
                     </DropdownMenuItem>
                   );
                 })}
               </>
             ) : null}
-            <DropdownMenuItem asChild className={profileItemClass}>
-              <Link to="/install">
-                <Download className="h-4 w-4 shrink-0" />
-                {t("nav.install")}
-              </Link>
+            <DropdownMenuItem
+              className={profileItemClass}
+              onSelect={() => {
+                window.setTimeout(() => {
+                  void navigate({ to: "/install" });
+                }, 0);
+              }}
+            >
+              <Download className="h-4 w-4 shrink-0" />
+              {t("nav.install")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {auth.token ? (
@@ -389,11 +421,16 @@ export function AppHeader() {
                 {t("header.signOut")}
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem asChild className={profileItemClass}>
-                <Link to="/login">
-                  <LogOut className="h-4 w-4 shrink-0" />
-                  {t("header.signIn")}
-                </Link>
+              <DropdownMenuItem
+                className={profileItemClass}
+                onSelect={() => {
+                  window.setTimeout(() => {
+                    void navigate({ to: "/login" });
+                  }, 0);
+                }}
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                {t("header.signIn")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

@@ -68,7 +68,7 @@ function ThreadPage() {
     if (!thread) return null;
     const jsonLd = [
       buildThreadQaPageJsonLd(thread, replies),
-      buildThreadDiscussionJsonLd(thread),
+      buildThreadDiscussionJsonLd({ ...thread, image: firstImageAttachment }, replies),
       buildBreadcrumbJsonLd([
         { name: "خانه", path: "/" },
         { name: "گفتگوها", path: "/threads" },
