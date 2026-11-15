@@ -47,6 +47,10 @@ export class UserEntity {
   @Column({ type: "int", default: 0 })
   adminDeletedRepliesCount!: number;
 
+  /** Updated by the client heartbeat. Online if this is within the last couple of minutes. */
+  @Column({ type: "datetime2", nullable: true })
+  lastSeenAt!: Date | null;
+
   @OneToMany(() => ThreadEntity, (t) => t.author)
   threads!: ThreadEntity[];
 

@@ -82,6 +82,21 @@ export type UserProfile = {
   rank: number;
   breakdown: UserActivityBreakdown;
   totalUsers: number;
+  lastSeenAt?: string | null;
+  isOnline?: boolean;
+  followersCount?: number;
+  followingCount?: number;
+  followedByMe?: boolean;
+};
+
+export type OnlineUser = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  lastSeenAt: string;
+  isOnline: boolean;
+  followedByMe: boolean;
+  isMe: boolean;
 };
 
 export type UserPointsEvent =

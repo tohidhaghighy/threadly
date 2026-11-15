@@ -13,7 +13,10 @@ import type { UpdateUserProfileDto } from "./dto";
 import { ThreadEntity } from "../../persistence/entities/thread.entity";
 import { ReplyEntity } from "../../persistence/entities/reply.entity";
 import { ReplyReactionEntity } from "../../persistence/entities/reply-reaction.entity";
+import { UserFollowEntity } from "../../persistence/entities/user-follow.entity";
 import { POINTS, PHONE_REQUIRED_MIN_POINTS, scoreFromCounts } from "../../common/points.constants";
+
+const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 
 @Injectable()
 export class UsersService {
@@ -22,6 +25,7 @@ export class UsersService {
     @InjectRepository(ThreadEntity) private readonly threadsRepo: Repository<ThreadEntity>,
     @InjectRepository(ReplyEntity) private readonly repliesRepo: Repository<ReplyEntity>,
     @InjectRepository(ReplyReactionEntity) private readonly reactionsRepo: Repository<ReplyReactionEntity>,
+    @InjectRepository(UserFollowEntity) private readonly followsRepo: Repository<UserFollowEntity>,
   ) {}
 
   async findById(id: string) {
@@ -218,7 +222,7 @@ export class UsersService {
     return { items, nextCursor: null };
   }
 
-  async profile(userId: string) {
+  async profile(userId: string, viewerId?: string) {
     const user = await this.findById(userId);
     const users = await this.usersRepo.find({ where: { status: "active" }, order: { createdAt: "ASC" } });
     const counts = await this.activityCountsByUserId();
@@ -234,6 +238,13 @@ export class UsersService {
       rows.findIndex((r) => r.id === user.id) + 1,
     );
     const breakdown = counts.get(user.id) ?? { threads: 0, comments: 0, reactions: 0 };
+    const [followersCount, followingCount, followedByMe] = await Promise.all([
+      this.followsRepo.count({ where: { following: { id: userId } } }),
+      this.followsRepo.count({ where: { follower: { id: userId } } }),
+      viewerId && viewerId !== userId
+        ? this.followsRepo.exists({ where: { follower: { id: viewerId }, following: { id: userId } } })
+        : Promise.resolve(false),
+    ]);
     return {
       id: user.id,
       name: user.name,
@@ -242,7 +253,118 @@ export class UsersService {
       rank,
       breakdown,
       totalUsers: rows.length,
+      lastSeenAt: user.lastSeenAt ? user.lastSeenAt.toISOString() : null,
+      isOnline: this.isOnline(user.lastSeenAt),
+      followersCount,
+      followingCount,
+      followedByMe,
     };
+  }
+
+  async touchPresence(userId: string) {
+    await this.usersRepo.update({ id: userId }, { lastSeenAt: new Date() });
+    return { ok: true };
+  }
+
+  async listOnline(viewerId?: string) {
+    const cutoff = new Date(Date.now() - ONLINE_WINDOW_MS);
+    const users = await this.usersRepo
+      .createQueryBuilder("u")
+      .where("u.status = :status", { status: "active" })
+      .andWhere("u.lastSeenAt IS NOT NULL")
+      .andWhere("u.lastSeenAt >= :cutoff", { cutoff })
+      .orderBy("u.lastSeenAt", "DESC")
+      .take(40)
+      .getMany();
+
+    const followedIds = new Set<string>();
+    if (viewerId && users.length) {
+      const follows = await this.followsRepo
+        .createQueryBuilder("f")
+        .leftJoin("f.follower", "follower")
+        .leftJoin("f.following", "following")
+        .select("following.id", "id")
+        .where("follower.id = :viewerId", { viewerId })
+        .andWhere("following.id IN (:...ids)", { ids: users.map((u) => u.id) })
+        .getRawMany<{ id: string }>();
+      for (const row of follows) followedIds.add(row.id);
+    }
+
+    const items = users
+      .map((u) => ({
+        id: u.id,
+        name: u.name,
+        avatarUrl: u.avatarUrl,
+        lastSeenAt: u.lastSeenAt!.toISOString(),
+        isOnline: true,
+        followedByMe: followedIds.has(u.id),
+        isMe: viewerId === u.id,
+      }))
+      .sort((a, b) => Number(b.isMe) - Number(a.isMe) || b.lastSeenAt.localeCompare(a.lastSeenAt));
+
+    return { items };
+  }
+
+  async follow(viewerId: string, targetId: string) {
+    if (viewerId === targetId) throw new BadRequestException("Cannot follow yourself");
+    const target = await this.findById(targetId);
+    if (target.status !== "active") throw new BadRequestException("User is not available");
+    const existing = await this.followsRepo.findOne({
+      where: { follower: { id: viewerId }, following: { id: targetId } },
+    });
+    if (!existing) {
+      const follower = await this.findById(viewerId);
+      await this.followsRepo.save(this.followsRepo.create({ follower, following: target }));
+    }
+    return { followed: true };
+  }
+
+  async unfollow(viewerId: string, targetId: string) {
+    await this.followsRepo
+      .createQueryBuilder()
+      .delete()
+      .where("followerId = :viewerId AND followingId = :targetId", { viewerId, targetId })
+      .execute();
+    return { followed: false };
+  }
+
+  async followingThreads(viewerId: string) {
+    const follows = await this.followsRepo.find({
+      where: { follower: { id: viewerId } },
+      relations: { following: true },
+    });
+    const ids = follows.map((f) => f.following.id);
+    if (!ids.length) return { items: [], nextCursor: null };
+
+    const threads = await this.threadsRepo
+      .createQueryBuilder("t")
+      .leftJoinAndSelect("t.author", "author")
+      .where("t.status = :status", { status: "approved" })
+      .andWhere("author.id IN (:...ids)", { ids })
+      .orderBy("t.createdAt", "DESC")
+      .take(30)
+      .getMany();
+
+    return {
+      items: threads.map((t) => ({
+        id: t.id,
+        title: t.title,
+        excerpt: t.excerpt,
+        category: t.category,
+        tags: t.tags ?? [],
+        author: { id: t.author.id, displayName: t.author.name, avatarUrl: t.author.avatarUrl },
+        status: t.status,
+        counts: { repliesCount: t.repliesCount, viewsCount: t.viewsCount, likesCount: t.likesCount },
+        createdAt: t.createdAt,
+        lastActivityAt: t.updatedAt,
+      })),
+      nextCursor: null,
+    };
+  }
+
+  private isOnline(lastSeenAt: Date | null) {
+    if (!lastSeenAt) return false;
+    return Date.now() - lastSeenAt.getTime() <= ONLINE_WINDOW_MS;
   }
 
   async pointsEvents(userId: string, input?: { limit?: string }) {

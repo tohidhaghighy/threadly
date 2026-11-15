@@ -13,11 +13,11 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { buildSeo } from "@/lib/seo";
-import { usePwaInstall } from "@/hooks/use-pwa-install";
+import { buildSeo } from "@/features/seo/seo";
+import { usePwaInstall } from "@/features/pwa/use-pwa-install";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { pageContainerClasses } from "@/styles/shared/page";
+import { pageContainerClasses } from "@/features/layout/page-styles";
 
 export const Route = createFileRoute("/install")({
   head: () => {

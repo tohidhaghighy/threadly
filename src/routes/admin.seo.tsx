@@ -3,14 +3,14 @@ import { Globe, Pencil } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useAuth } from "@/lib/auth";
-import { buildSeo } from "@/lib/seo";
+import { useAuth } from "@/features/auth/auth-context";
+import { buildSeo } from "@/features/seo/seo";
 import {
   formatKeywordsInput,
   parseKeywordsInput,
   type PageSeoItem,
-} from "@/lib/page-seo";
-import { useAdminPageSeoList, useUpdateAdminPageSeo } from "@/hooks/api";
+} from "@/features/seo/page-seo";
+import { useAdminPageSeoList, useUpdateAdminPageSeo } from "@/features/seo/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,8 +33,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RichTextEditor } from "@/components/shared/rich-text";
-import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
+import { RichTextEditor } from "@/features/rich-text";
+import { AdminPager, useClientPage } from "@/features/admin/components/AdminPager";
 
 export const Route = createFileRoute("/admin/seo")({
   head: () => {

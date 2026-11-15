@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Crown, Trophy } from "lucide-react";
-import { levelFromPoints } from "@/lib/gamification";
+import { levelFromPoints } from "@/features/users/gamification";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { buildSeo } from "@/lib/seo";
-import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
-import { useUsersLeaderboard } from "@/hooks/api";
+import { buildSeo } from "@/features/seo/seo";
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/features/seo/page-seo";
+import { useUsersLeaderboard } from "@/features/users/hooks";
 
 export const Route = createFileRoute("/users/")({
   head: () => {

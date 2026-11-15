@@ -11,11 +11,11 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { useAuth } from "@/lib/auth";
-import { buildSeo } from "@/lib/seo";
-import { deleteAdminReaction, deleteAdminThread, fetchAdminUserDetail } from "@/api/admin";
-import { deleteAdminReply } from "@/api/replies";
-import { stripHtmlToText } from "@/lib/sanitize-html";
+import { useAuth } from "@/features/auth/auth-context";
+import { buildSeo } from "@/features/seo/seo";
+import { deleteAdminReaction, deleteAdminThread, fetchAdminUserDetail } from "@/features/admin/api";
+import { deleteAdminReply } from "@/features/replies/api";
+import { stripHtmlToText } from "@/features/rich-text/sanitize-html";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
+import { AdminPager, useClientPage } from "@/features/admin/components/AdminPager";
 
 export const Route = createFileRoute("/admin/users/$id")({
   head: () => {

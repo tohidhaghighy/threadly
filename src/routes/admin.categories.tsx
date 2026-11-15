@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/features/auth/auth-context";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { buildSeo } from "@/lib/seo";
-import { formatKeywordsInput, parseKeywordsInput } from "@/lib/page-seo";
-import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
+import { buildSeo } from "@/features/seo/seo";
+import { formatKeywordsInput, parseKeywordsInput } from "@/features/seo/page-seo";
+import { AdminPager, useClientPage } from "@/features/admin/components/AdminPager";
 
 type CategoryAdminItem = {
   id: string;

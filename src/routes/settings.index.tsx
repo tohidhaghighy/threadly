@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserCircle } from "lucide-react";
-import { useAuth } from "@/lib/auth";
-import { buildSeo } from "@/lib/seo";
-import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
-import { PageBackLink } from "@/components/shared/layout/PageBackLink";
-import { AuthGate } from "@/components/shared/layout/AuthGate";
-import { PageSection } from "@/components/shared/layout/PageSection";
-import { ProfileContactForm } from "@/components/shared/profile/ProfileContactForm";
-import { AvatarPicker } from "@/components/shared/profile/AvatarPicker";
-import { pageContainerClasses, cardShellClasses } from "@/styles/shared/page";
+import { useAuth } from "@/features/auth/auth-context";
+import { buildSeo } from "@/features/seo/seo";
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/features/seo/page-seo";
+import { PageBackLink } from "@/features/layout/components/PageBackLink";
+import { AuthGate } from "@/features/auth/components/AuthGate";
+import { PageSection } from "@/features/layout/components/PageSection";
+import { ProfileContactForm } from "@/features/users/components/ProfileContactForm";
+import { AvatarPicker } from "@/features/users/components/AvatarPicker";
+import { pageContainerClasses, cardShellClasses } from "@/features/layout/page-styles";
 
 export const Route = createFileRoute("/settings/")({
   head: () => {

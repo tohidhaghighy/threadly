@@ -1,15 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, AtSign, Bell, MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMyAlerts } from "@/api/users";
+import { fetchMyAlerts } from "@/features/users/api";
 import type { UserAlertItem } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
-import { buildSeo } from "@/lib/seo";
-import { AuthGate } from "@/components/shared/layout/AuthGate";
-import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
+import { useAuth } from "@/features/auth/auth-context";
+import { buildSeo } from "@/features/seo/seo";
+import { AuthGate } from "@/features/auth/components/AuthGate";
+import { AdminPager, useClientPage } from "@/features/admin/components/AdminPager";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { pageContainerClasses } from "@/styles/shared/page";
+import { pageContainerClasses } from "@/features/layout/page-styles";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/alerts")({

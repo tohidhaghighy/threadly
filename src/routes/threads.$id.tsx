@@ -5,17 +5,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RichTextContent } from "@/components/shared/rich-text";
-import { ReplyItem } from "@/components/shared/thread/ReplyItem";
-import { ReplyComposer } from "@/components/shared/thread/ReplyComposer";
-import { stripHtmlToText } from "@/lib/sanitize-html";
+import { RichTextContent } from "@/features/rich-text";
+import { ReplyItem } from "@/features/replies/components/ReplyItem";
+import { ReplyComposer } from "@/features/replies/components/ReplyComposer";
+import { stripHtmlToText } from "@/features/rich-text/sanitize-html";
 import { toast } from "sonner";
 import type { ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/features/auth/auth-context";
 import { formatDistanceToNow } from "date-fns";
-import { buildSeo, useSeo } from "@/lib/seo";
-import { buildBreadcrumbJsonLd, buildThreadDiscussionJsonLd, buildThreadQaPageJsonLd } from "@/lib/seo-schema";
-import { useRecordThreadView, useReplies, useSetBestReply, useThread, useToggleThreadLike } from "@/hooks/api";
+import { buildSeo, useSeo } from "@/features/seo/seo";
+import { buildBreadcrumbJsonLd, buildThreadDiscussionJsonLd, buildThreadQaPageJsonLd } from "@/features/seo/seo-schema";
+import { useRecordThreadView, useSetBestReply, useThread, useToggleThreadLike } from "@/features/threads/hooks";
+import { useReplies } from "@/features/replies/hooks";
 
 export const Route = createFileRoute("/threads/$id")({
   head: ({ params }) => {

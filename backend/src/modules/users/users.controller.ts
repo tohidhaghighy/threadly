@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UsersService } from "./users.service";
 import { JwtAuthGuard } from "../auth/jwt.guard";
+import { OptionalJwtAuthGuard } from "../auth/optional-jwt.guard";
 import { ApiBearerAuth, ApiBody, ApiConsumes } from "@nestjs/swagger";
 import type { Request } from "express";
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -56,7 +57,31 @@ export class UsersController {
     return this.users.updateMyProfile(user.userId, dto);
   }
 
+  @Post("me/presence")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  touchPresence(@Req() req: Request) {
+    const user = req.user as { userId: string };
+    return this.users.touchPresence(user.userId);
+  }
+
+  @Get("online")
+  @UseGuards(OptionalJwtAuthGuard)
+  online(@Req() req: Request) {
+    const user = req.user as { userId?: string } | undefined;
+    return this.users.listOnline(user?.userId);
+  }
+
+  @Get("me/following/threads")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  followingThreads(@Req() req: Request) {
+    const user = req.user as { userId: string };
+    return this.users.followingThreads(user.userId);
+  }
+
   @Get(":id/profile")
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiResponse({
     status: 200,
     schema: {
@@ -71,8 +96,25 @@ export class UsersController {
       },
     },
   })
-  profile(@Param("id") id: string) {
-    return this.users.profile(id);
+  profile(@Param("id") id: string, @Req() req: Request) {
+    const viewer = req.user as { userId?: string } | undefined;
+    return this.users.profile(id, viewer?.userId);
+  }
+
+  @Post(":id/follow")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  follow(@Req() req: Request, @Param("id") id: string) {
+    const user = req.user as { userId: string };
+    return this.users.follow(user.userId, id);
+  }
+
+  @Delete(":id/follow")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  unfollow(@Req() req: Request, @Param("id") id: string) {
+    const user = req.user as { userId: string };
+    return this.users.unfollow(user.userId, id);
   }
 
   @Get(":id/points-events")

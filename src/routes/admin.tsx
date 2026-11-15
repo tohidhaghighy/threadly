@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/features/auth/auth-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type ThreadDetail } from "@/lib/api";
-import { deleteAdminThread } from "@/api/admin";
+import { deleteAdminThread } from "@/features/admin/api";
 import { useI18n } from "@/lib/i18n";
 import {
   Dialog,
@@ -25,9 +25,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCategories } from "@/lib/categories";
-import { buildSeo } from "@/lib/seo";
-import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
+import { useCategories } from "@/features/categories/categories";
+import { buildSeo } from "@/features/seo/seo";
+import { AdminPager, useClientPage } from "@/features/admin/components/AdminPager";
 
 export const Route = createFileRoute("/admin")({
   head: () => {

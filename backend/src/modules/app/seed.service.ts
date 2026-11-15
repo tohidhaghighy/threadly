@@ -12,6 +12,7 @@ import { ReplyAttachmentEntity } from "../../persistence/entities/reply-attachme
 import { AttachmentEntity } from "../../persistence/entities/attachment.entity";
 import { ThreadLikeEntity } from "../../persistence/entities/thread-like.entity";
 import { ThreadViewEntity } from "../../persistence/entities/thread-view.entity";
+import { UserFollowEntity } from "../../persistence/entities/user-follow.entity";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ADMIN_FAQ_ITEMS, ADMIN_FAQ_SEED_TAG } from "./seed-admin-faq.data";
@@ -42,6 +43,7 @@ export class SeedService {
   /** Remove all threads and every user except admin accounts. */
   async clearAllExceptAdmin() {
     await this.clearAllThreadsAndReplies();
+    await this.dataSource.getRepository(UserFollowEntity).clear();
     const result = await this.usersRepo.delete({ role: Not("admin" as const) });
     return { deletedUsers: result.affected ?? 0 };
   }

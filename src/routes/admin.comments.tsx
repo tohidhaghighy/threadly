@@ -2,15 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, MessageSquareText, Pencil, Trash2, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/features/auth/auth-context";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { RichTextEditor } from "@/components/shared/rich-text";
-import { stripHtmlToText } from "@/lib/sanitize-html";
+import { RichTextEditor } from "@/features/rich-text";
+import { stripHtmlToText } from "@/features/rich-text/sanitize-html";
 import { toast } from "sonner";
-import { useAdminReplies, useDeleteAdminReply, useUpdateAdminReply } from "@/hooks/api";
+import { useAdminReplies, useDeleteAdminReply, useUpdateAdminReply } from "@/features/admin/hooks";
 import {
   Table,
   TableBody,
@@ -27,8 +27,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { buildSeo } from "@/lib/seo";
-import { AdminPager, useClientPage } from "@/components/admin/AdminPager";
+import { buildSeo } from "@/features/seo/seo";
+import { AdminPager, useClientPage } from "@/features/admin/components/AdminPager";
 
 export const Route = createFileRoute("/admin/comments")({
   head: () => {

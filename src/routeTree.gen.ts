@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as ChangePasswordRouteImport } from './routes/change-password'
+import { Route as FollowingRouteImport } from './routes/following'
 import { Route as InstallRouteImport } from './routes/install'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NewRouteImport } from './routes/new'
@@ -48,6 +49,11 @@ const AlertsRoute = AlertsRouteImport.update({
 const ChangePasswordRoute = ChangePasswordRouteImport.update({
   id: '/change-password',
   path: '/change-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FollowingRoute = FollowingRouteImport.update({
+  id: '/following',
+  path: '/following',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstallRoute = InstallRouteImport.update({
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/alerts': typeof AlertsRoute
   '/change-password': typeof ChangePasswordRoute
+  '/following': typeof FollowingRoute
   '/install': typeof InstallRoute
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRouteWithChildren
   '/alerts': typeof AlertsRoute
   '/change-password': typeof ChangePasswordRoute
+  '/following': typeof FollowingRoute
   '/install': typeof InstallRoute
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/alerts': typeof AlertsRoute
   '/change-password': typeof ChangePasswordRoute
+  '/following': typeof FollowingRoute
   '/install': typeof InstallRoute
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/alerts'
     | '/change-password'
+    | '/following'
     | '/install'
     | '/login'
     | '/new'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/alerts'
     | '/change-password'
+    | '/following'
     | '/install'
     | '/login'
     | '/new'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/alerts'
     | '/change-password'
+    | '/following'
     | '/install'
     | '/login'
     | '/new'
@@ -266,6 +278,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AlertsRoute: typeof AlertsRoute
   ChangePasswordRoute: typeof ChangePasswordRoute
+  FollowingRoute: typeof FollowingRoute
   InstallRoute: typeof InstallRoute
   LoginRoute: typeof LoginRoute
   NewRoute: typeof NewRoute
@@ -303,6 +316,13 @@ declare module '@tanstack/react-router' {
       path: '/change-password'
       fullPath: '/change-password'
       preLoaderRoute: typeof ChangePasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/following': {
+      id: '/following'
+      path: '/following'
+      fullPath: '/following'
+      preLoaderRoute: typeof FollowingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/install': {
@@ -478,6 +498,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AlertsRoute: AlertsRoute,
   ChangePasswordRoute: ChangePasswordRoute,
+  FollowingRoute: FollowingRoute,
   InstallRoute: InstallRoute,
   LoginRoute: LoginRoute,
   NewRoute: NewRoute,

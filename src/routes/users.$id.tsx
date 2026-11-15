@@ -24,11 +24,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "@tanstack/react-router";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useAuth } from "@/lib/auth";
-import { buildSeo, useSeo } from "@/lib/seo";
-import { buildBreadcrumbJsonLd } from "@/lib/seo-schema";
-import { achievementsFromProfile, activityStreakFromEvents, levelFromPoints } from "@/lib/gamification";
-import { useUserPointsEvents, useUserProfile } from "@/hooks/api";
+import { useAuth } from "@/features/auth/auth-context";
+import { buildSeo, useSeo } from "@/features/seo/seo";
+import { buildBreadcrumbJsonLd } from "@/features/seo/seo-schema";
+import { achievementsFromProfile, activityStreakFromEvents, levelFromPoints } from "@/features/users/gamification";
+import { useUserPointsEvents, useUserProfile, useFollowToggle } from "@/features/users/hooks";
 
 export const Route = createFileRoute("/users/$id")({
   head: ({ params }) => {
@@ -49,6 +49,7 @@ function UserProfilePage() {
 
   const q = useUserProfile(id);
   const eventsQ = useUserPointsEvents(id, 200);
+  const followToggle = useFollowToggle(id);
 
   const u = q.data;
   const events = eventsQ.data?.items ?? [];
@@ -159,17 +160,45 @@ function UserProfilePage() {
                     </Badge>
                   </div>
                 ) : null}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className={u.isOnline ? "border-primary/40 text-primary" : undefined}>
+                    {u.isOnline ? "آنلاین" : u.lastSeenAt ? `آخرین بازدید ${new Date(u.lastSeenAt).toLocaleString("fa-IR")}` : "آفلاین"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {(u.followersCount ?? 0).toLocaleString("fa-IR")} دنبال‌کننده · {(u.followingCount ?? 0).toLocaleString("fa-IR")} دنبال‌شونده
+                  </span>
+                </div>
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2">
                 <span className="text-xs font-semibold text-muted-foreground">امتیاز</span>
                 <span className="text-2xl font-extrabold text-primary">{u.points.toLocaleString("fa-IR")}</span>
               </div>
               <div className="ms-auto flex items-center gap-2">
+                {!isMyProfile && auth.token ? (
+                  <Button
+                    variant={u.followedByMe ? "outline" : "hero"}
+                    size="sm"
+                    disabled={followToggle.isPending}
+                    onClick={() => followToggle.mutate(!!u.followedByMe)}
+                  >
+                    {u.followedByMe ? "دنبال می‌کنید" : "دنبال کردن"}
+                  </Button>
+                ) : null}
+                {!isMyProfile && !auth.token ? (
+                  <Button asChild variant="hero" size="sm">
+                    <Link to="/login">دنبال کردن</Link>
+                  </Button>
+                ) : null}
                 <Button asChild variant="outline" size="sm">
                   <Link to="/threads">مشاهده گفتگوها</Link>
                 </Button>
                 {isMyProfile ? (
                   <Button asChild variant="hero" size="sm">
+                    <Link to="/following">گفتگوهای دنبال‌شده</Link>
+                  </Button>
+                ) : null}
+                {isMyProfile ? (
+                  <Button asChild variant="outline" size="sm">
                     <Link to="/settings">ویرایش پروفایل</Link>
                   </Button>
                 ) : null}

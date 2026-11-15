@@ -1,21 +1,22 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
-import { AppHeader } from "@/components/AppHeader";
+import { AppHeader } from "@/features/layout/components/AppHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider, useI18n } from "@/lib/i18n";
 import { AppQueryProvider } from "@/lib/query";
-import { AuthProvider } from "@/lib/auth";
-import { buildSeo } from "@/lib/seo";
-import { ForumTopBanner } from "@/components/ForumTopBanner";
-import { SiteSeoBlurb } from "@/components/SiteSeoBlurb";
-import { PhoneRequiredBanner } from "@/components/shared/profile/PhoneRequiredBanner";
+import { AuthProvider } from "@/features/auth/auth-context";
+import { buildSeo } from "@/features/seo/seo";
+import { ForumTopBanner } from "@/features/layout/components/ForumTopBanner";
+import { SiteSeoBlurb } from "@/features/seo/components/SiteSeoBlurb";
+import { PhoneRequiredBanner } from "@/features/users/components/PhoneRequiredBanner";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
-import { PwaRegister } from "@/components/PwaRegister";
-import { PwaInstallBanner } from "@/components/PwaInstallBanner";
-import { BottomMegaMenu } from "@/components/BottomMegaMenu";
-import { Background3D } from "@/components/Background3D";
-import { RouteProgress } from "@/components/RouteProgress";
-import { NewThreadNotice } from "@/components/NewThreadNotice";
+import { PwaRegister } from "@/features/pwa/components/PwaRegister";
+import { PwaInstallBanner } from "@/features/pwa/components/PwaInstallBanner";
+import { BottomMegaMenu } from "@/features/layout/components/BottomMegaMenu";
+import { Background3D } from "@/features/layout/components/Background3D";
+import { RouteProgress } from "@/features/layout/components/RouteProgress";
+import { NewThreadNotice } from "@/features/threads/components/NewThreadNotice";
+import { OnlineUsersBar } from "@/features/users/components/OnlineUsersBar";
 
 const GTM_ID = "GTM-MZ6KVF7C";
 const GTM_HEAD_SCRIPT = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -169,6 +170,7 @@ function RootComponent() {
               <div className="glass-strong sticky top-0 z-40 border-b border-border/60 shadow-sm">
                 <ForumTopBanner />
                 <AppHeader />
+                <OnlineUsersBar />
                 <PhoneRequiredBanner />
               </div>
             ) : (

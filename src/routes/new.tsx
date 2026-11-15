@@ -4,22 +4,23 @@ import { Upload, CheckCircle2, Clock, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RichTextEditor } from "@/components/shared/rich-text";
-import { stripHtmlToText } from "@/lib/sanitize-html";
+import { RichTextEditor } from "@/features/rich-text";
+import { stripHtmlToText } from "@/features/rich-text/sanitize-html";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { categories as mockCategories } from "@/lib/mock-data";
+import { categories as mockCategories } from "@/features/categories/mock-data";
 import { toast } from "sonner";
-import { createThread, uploadThreadImages } from "@/api/threads";
-import { useAuth } from "@/lib/auth";
+import { createThread, uploadThreadImages } from "@/features/threads/api";
+import { useAuth } from "@/features/auth/auth-context";
 import { useI18n, tStatic } from "@/lib/i18n";
 import type { ApiError } from "@/lib/api";
-import { useCategories, useUserProfile } from "@/hooks/api";
-import { buildSeo } from "@/lib/seo";
-import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
-import { needsPhoneForSupport } from "@/components/shared/profile/PhoneRequiredBanner";
+import { useCategories } from "@/features/categories/hooks";
+import { useUserProfile } from "@/features/users/hooks";
+import { buildSeo } from "@/features/seo/seo";
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/features/seo/page-seo";
+import { needsPhoneForSupport } from "@/features/users/components/PhoneRequiredBanner";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/new")({

@@ -13,6 +13,7 @@ import { CategoryEntity } from "./entities/category.entity";
 import { ThreadLikeEntity } from "./entities/thread-like.entity";
 import { ThreadViewEntity } from "./entities/thread-view.entity";
 import { PageSeoEntity } from "./entities/page-seo.entity";
+import { UserFollowEntity } from "./entities/user-follow.entity";
 
 export const APP_ENTITIES = [
   UserEntity,
@@ -26,6 +27,7 @@ export const APP_ENTITIES = [
   ThreadLikeEntity,
   ThreadViewEntity,
   PageSeoEntity,
+  UserFollowEntity,
 ] as const;
 
 export type ParsedMssqlConnection = {

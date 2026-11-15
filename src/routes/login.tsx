@@ -11,11 +11,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/features/auth/auth-context";
 import { useI18n } from "@/lib/i18n";
 import type { ApiError } from "@/lib/api";
-import { buildSeo } from "@/lib/seo";
-import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/lib/page-seo";
+import { buildSeo } from "@/features/seo/seo";
+import { PAGE_SEO_KEYS, useStaticPageSeo } from "@/features/seo/page-seo";
 
 type LoginValues = { email: string; password: string };
 

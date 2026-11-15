@@ -6,24 +6,24 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { categories as mockCategories } from "@/lib/mock-data";
-import { ThreadCard } from "@/components/ThreadCard";
-import { AnimatedSection } from "@/components/AnimatedSection";
-import { CategoryCardSkeleton } from "@/components/skeletons/CategoryCardSkeleton";
-import { ThreadCardSkeleton } from "@/components/skeletons/ThreadCardSkeleton";
+import { categories as mockCategories } from "@/features/categories/mock-data";
+import { ThreadCard } from "@/features/threads/components/ThreadCard";
+import { AnimatedSection } from "@/features/layout/components/AnimatedSection";
+import { CategoryCardSkeleton } from "@/features/categories/components/CategoryCardSkeleton";
+import { ThreadCardSkeleton } from "@/features/threads/components/ThreadCardSkeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api, type ThreadListItem } from "@/lib/api";
-import { useCategories } from "@/lib/categories";
-import { buildSeo, useSeo } from "@/lib/seo";
+import { useCategories } from "@/features/categories/categories";
+import { buildSeo, useSeo } from "@/features/seo/seo";
 import {
   buildCategoriesItemListJsonLd,
   buildOrganizationJsonLd,
   buildThreadsItemListJsonLd,
   buildWebSiteJsonLd,
-} from "@/lib/seo-schema";
-import { PAGE_SEO_KEYS, pageSeoToInput, usePageSeo } from "@/lib/page-seo";
-import { getCategorySeoCopy, HOME_SEO_META } from "@/lib/seo-content";
+} from "@/features/seo/seo-schema";
+import { PAGE_SEO_KEYS, pageSeoToInput, usePageSeo } from "@/features/seo/page-seo";
+import { getCategorySeoCopy, HOME_SEO_META } from "@/features/seo/seo-content";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({

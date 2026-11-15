@@ -1,25 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Filter, Inbox } from "lucide-react";
-import { ThreadCard } from "@/components/ThreadCard";
+import { ThreadCard } from "@/features/threads/components/ThreadCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { AnimatedSection } from "@/components/AnimatedSection";
-import { ThreadCardSkeleton } from "@/components/skeletons/ThreadCardSkeleton";
+import { AnimatedSection } from "@/features/layout/components/AnimatedSection";
+import { ThreadCardSkeleton } from "@/features/threads/components/ThreadCardSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import { api, type ThreadListItem } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
-import { useCategories } from "@/lib/categories";
-import { buildSeo, useSeo } from "@/lib/seo";
-import { getCategorySeoCopy } from "@/lib/seo-content";
+import { useCategories } from "@/features/categories/categories";
+import { buildSeo, useSeo } from "@/features/seo/seo";
+import { getCategorySeoCopy } from "@/features/seo/seo-content";
 import {
   buildBreadcrumbJsonLd,
   buildCategoriesItemListJsonLd,
   buildCategoryCollectionJsonLd,
   buildThreadsItemListJsonLd,
-} from "@/lib/seo-schema";
-import { PAGE_SEO_KEYS, pageSeoToInput, usePageSeo } from "@/lib/page-seo";
+} from "@/features/seo/seo-schema";
+import { PAGE_SEO_KEYS, pageSeoToInput, usePageSeo } from "@/features/seo/page-seo";
 
 export const Route = createFileRoute("/threads/")({
   head: () => {
