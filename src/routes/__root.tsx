@@ -112,6 +112,8 @@ export const Route = createRootRoute({
         { rel: "manifest", href: "/site.webmanifest" },
         { rel: "dns-prefetch", href: "https://www.googletagmanager.com" },
         { rel: "preconnect", href: "https://www.googletagmanager.com" },
+        { rel: "dns-prefetch", href: "https://analytics.faterco.ir" },
+        { rel: "preconnect", href: "https://analytics.faterco.ir" },
         ...seo.links,
       ],
     };
@@ -126,6 +128,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: GTM_HEAD_SCRIPT }} />
+        <script
+          defer
+          src="https://analytics.faterco.ir/script.js"
+          data-website-id="d72c0b00-f07d-4b01-b25b-6712cff825b4"
+        />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
