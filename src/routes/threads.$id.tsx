@@ -106,6 +106,7 @@ function ThreadPage() {
       tags: thread.tags ?? [],
       title: thread.title,
       author: {
+        id: thread.author.id,
         name: thread.author.displayName,
         avatar: (thread.author.displayName[0] ?? "U").toUpperCase(),
       },
@@ -180,14 +181,27 @@ function ThreadPage() {
               <h1 className="mt-4 text-xl font-extrabold leading-relaxed sm:text-2xl md:text-3xl">{headerModel.title}</h1>
 
               <div className="mt-4 flex items-center gap-3">
-                <Avatar className="h-11 w-11 ring-2 ring-primary/40">
-                  {thread?.author.avatarUrl ? <AvatarImage src={thread.author.avatarUrl} alt={thread.author.displayName} /> : null}
-                  <AvatarFallback className="bg-gradient-primary font-bold text-primary-foreground">
-                    {headerModel.author.avatar}
-                  </AvatarFallback>
-                </Avatar>
+                <Link
+                  to="/users/$id"
+                  params={{ id: headerModel.author.id }}
+                  aria-label={`پروفایل ${headerModel.author.name}`}
+                  className="shrink-0 rounded-full"
+                >
+                  <Avatar className="h-11 w-11 ring-2 ring-primary/40">
+                    {thread?.author.avatarUrl ? <AvatarImage src={thread.author.avatarUrl} alt={thread.author.displayName} /> : null}
+                    <AvatarFallback className="bg-gradient-primary font-bold text-primary-foreground">
+                      {headerModel.author.avatar}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div>
-                  <p className="text-sm font-semibold">{headerModel.author.name}</p>
+                  <Link
+                    to="/users/$id"
+                    params={{ id: headerModel.author.id }}
+                    className="text-sm font-semibold hover:text-primary"
+                  >
+                    {headerModel.author.name}
+                  </Link>
                   <p className="text-xs text-muted-foreground">
                     {headerModel.time} • {headerModel.views.toLocaleString("fa-IR")} بازدید
                   </p>

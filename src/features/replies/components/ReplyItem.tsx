@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { CheckCircle2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { ReplyListItem } from "@/lib/api";
@@ -22,17 +23,30 @@ export function ReplyItem({ reply, threadId, canPickBestAnswer, onToggleBest, be
       className="scroll-mt-24 rounded-xl border border-border/60 bg-card p-5 shadow-card"
     >
       <div className="flex items-start gap-3">
-        <Avatar className="h-10 w-10 ring-2 ring-border">
-          {reply.author.avatarUrl ? (
-            <AvatarImage src={reply.author.avatarUrl} alt={reply.author.displayName} />
-          ) : null}
-          <AvatarFallback className="bg-secondary text-sm font-bold">
-            {(reply.author.displayName[0] ?? "ک").toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <Link
+          to="/users/$id"
+          params={{ id: reply.author.id }}
+          aria-label={`پروفایل ${reply.author.displayName}`}
+          className="shrink-0 rounded-full"
+        >
+          <Avatar className="h-10 w-10 ring-2 ring-border">
+            {reply.author.avatarUrl ? (
+              <AvatarImage src={reply.author.avatarUrl} alt={reply.author.displayName} />
+            ) : null}
+            <AvatarFallback className="bg-secondary text-sm font-bold">
+              {(reply.author.displayName[0] ?? "ک").toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">{reply.author.displayName}</span>
+            <Link
+              to="/users/$id"
+              params={{ id: reply.author.id }}
+              className="text-sm font-semibold hover:text-primary"
+            >
+              {reply.author.displayName}
+            </Link>
             {reply.isBest ? (
               <Badge className="gap-1 border border-emerald-500/30 bg-emerald-500/10 text-emerald-600">
                 <CheckCircle2 className="h-3.5 w-3.5" />
